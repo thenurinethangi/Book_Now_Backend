@@ -4,28 +4,33 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 dotenv.config();
 
+import authRouter from './routes/authRoute'
+
 const dbUrl = process.env.DATABASE_URL as string;
 
 const app = express();
 
 app.use(cors({
     origin: ['http://localhost:5173'],
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 }));
 
 app.use(express.json());
 
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/v1/auth', authRouter);
 
 mongoose.connect(dbUrl)
-        .then(() => {
-            console.log('Database connected!');
-        })
-        .catch((err) => {
-            console.error('Database connection fail: ',err);
-            process.exit(1);
-        })
+    .then(() => {
+        console.log('Database connected!');
+    })
+    .catch((err) => {
+        console.error('Database connection fail: ', err);
+        process.exit(1);
+    })
 
-app.listen(5000,() => {
+app.listen(5000, () => {
     console.log('Server listen on port 5000.');
 });

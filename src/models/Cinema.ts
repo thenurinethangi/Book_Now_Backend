@@ -14,6 +14,9 @@ export interface ICinema extends Document {
     googleMapLink: string
     website?: string
     noOfScreens: string
+    bussinessRegisterNo: string
+    cinemaImageUrl: string
+    bussinessRegisterDocumentsUrl: string
     userId: mongoose.Types.ObjectId
     status: Status
     createdAt?: Date

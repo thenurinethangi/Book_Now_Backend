@@ -7,6 +7,7 @@ export interface ICinemaOwner extends Document {
     name: string
     nationalIdNumber: string
     nationalIdDocumentUrl: string
+    cinemaId: mongoose.Types.ObjectId
     status: Status
     createdAt?: Date
     updatedAt?: Date
@@ -17,6 +18,7 @@ const cinemaOwnerSchema = new Schema<ICinemaOwner>({
     name: { type: String, required: true, unique: true },
     nationalIdNumber: { type: String, required: true, unique: true },
     nationalIdDocumentUrl: { type: String, required: true },
+    cinemaId: { type: Schema.Types.ObjectId, ref: 'Cinema', required: true },
     status: { type: String, enum: Object.values(Status), required: true }
 },
     {
