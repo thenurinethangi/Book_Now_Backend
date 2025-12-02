@@ -93,3 +93,37 @@ export const getAllScreens = async (req: AuthRequest, res: Response) => {
     }
 
 }
+
+
+export const deleteAScreen = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).json({ message: "Screen ID is required for deletion!", data: null });
+        return;
+    }
+
+    try {
+        const screen = await Screen.findOne({ _id: id });
+
+        if (!screen) {
+            res.status(404).json({ message: "Screen not found!", data: null });
+            return;
+        }
+
+        const result = await Screen.deleteOne({ _id: screen._id });
+
+        if (result) {
+            res.status(200).json({ message: "Successfully load all screens!", data: null });
+            return;
+        }
+        res.status(500).json({ message: `Fail to delete the screen id: ${id}!`, data: null });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to delete the screen id: ${id}!`, data: null });
+        return;
+    }
+
+}
