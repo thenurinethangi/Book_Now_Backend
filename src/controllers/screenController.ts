@@ -127,3 +127,45 @@ export const deleteAScreen = async (req: AuthRequest, res: Response) => {
     }
 
 }
+
+
+export const updateScreenStatus = async (req: AuthRequest, res: Response) => {
+
+    const { id, status } = req.body;
+
+    if (!id || !status) {
+        res.status(400).json({ message: "Data not provided!", data: null });
+        return;
+    }
+
+    try {
+        const screen = await Screen.findOne({ _id: id });
+
+        if (!screen) {
+            res.status(404).json({ message: "Screen not found!", data: null });
+            return;
+        }
+
+        let result = false;
+        if (status === 'ACTIVE') {
+            const r1 = await Screen.updateOne({ _id: screen._id }, { status: ScreenStatus.ACTIVE });
+            result = r1.modifiedCount === 1;
+        }
+        else if (status === 'UNAVAILABLE') {
+            const r2 = await Screen.updateOne({ _id: screen._id }, { status: ScreenStatus.UNAVAILABLE });
+            result = r2.modifiedCount === 1;
+        }
+
+        if (result) {
+            res.status(200).json({ message: "Successfully updated the screen status!", data: null });
+            return;
+        }
+        res.status(500).json({ message: `Fail to update the screen status!`, data: null });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to update the screen status!`, data: null });
+        return;
+    }
+
+}

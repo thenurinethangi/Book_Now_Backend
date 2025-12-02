@@ -1,5 +1,5 @@
 import express from 'express';
-import { addNewScreen, deleteAScreen, getAllScreens } from '../controllers/screenController';
+import { addNewScreen, deleteAScreen, getAllScreens, updateScreenStatus } from '../controllers/screenController';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
@@ -12,5 +12,7 @@ router.post('/add', authenticate, authorize([Role.CINEMA]), upload.single('scree
 router.get('/all', authenticate, authorize([Role.CINEMA]), getAllScreens);
 
 router.delete('/delete/:id', authenticate, authorize([Role.CINEMA]), deleteAScreen);
+
+router.put('/update/status', authenticate, authorize([Role.CINEMA]), updateScreenStatus);
 
 export default router;
