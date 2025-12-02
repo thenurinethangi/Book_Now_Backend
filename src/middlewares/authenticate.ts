@@ -3,13 +3,13 @@ import { verifyAccessToken } from '../utils/jwtUtil';
 import { Role } from '../models/User';
 
 export interface AuthRequest extends Request{
-    sub: string,
-    roles: Role[]
+    sub?: string,
+    roles?: Role[]
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
 
-    const accessToken = req.headers.authorization;
+    const accessToken = req.headers.authorization?.split('Bearer ')[1];
 
     if(!accessToken){
         res.status(401).json({message: 'Unauthenticate!, no access token provide, please login!', data: null});

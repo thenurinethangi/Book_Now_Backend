@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-enum ScreenStatus{
+export enum ScreenStatus{
     ACTIVE = 'ACTIVE',
     UNAVAILABLE = 'UNAVAILABLE',
     MAINTENANCE = 'MAINTENANCE',

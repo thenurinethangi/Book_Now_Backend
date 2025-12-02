@@ -128,9 +128,6 @@ export const signIn = async (req: Request, res: Response) => {
 
     const { email, password } = req.body;
 
-    console.log(email);
-    console.log(password);
-
     if (!email || !password) {
         res.status(400).json({ message: "All fields required!", data: null });
         return;

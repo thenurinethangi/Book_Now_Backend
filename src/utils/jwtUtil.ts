@@ -15,7 +15,7 @@ export const generateAccessToken = (user: IUser) => {
         },
         jwtAccessTokenSecret,
         {
-            expiresIn: '30m'
+            expiresIn: '1d'
         }
     );
 }
