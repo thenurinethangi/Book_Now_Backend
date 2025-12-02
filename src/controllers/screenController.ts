@@ -10,18 +10,11 @@ export const addNewScreen = async (req: AuthRequest, res: Response) => {
 
     try {
         seatLayout = JSON.parse(seatLayout);
-    } 
+    }
     catch (err) {
-        res.status(400).json({message: "Invalid seat layout format!",data: null});
+        res.status(400).json({ message: "Invalid seat layout format!", data: null });
         return;
     }
-
-    console.log(screenName)
-    console.log(description);
-    console.log(numberOfSeats)
-    console.log(screenTypes)
-    console.log(seatTypes)
-    console.log(seatLayout)
 
     if (!screenName || !description || !numberOfSeats || !screenTypes?.length || !seatTypes?.length || !seatLayout?.length) {
         res.status(400).json({ message: "All fields required!", data: null });
@@ -50,8 +43,6 @@ export const addNewScreen = async (req: AuthRequest, res: Response) => {
     try {
         const cinema = await Cinema.findOne({ userId: req.sub });
 
-        console.log(cinema);
-
         if (!cinema) {
             res.status(500).json({ message: "Something went wrong, try later!", data: null });
             return;
@@ -78,4 +69,27 @@ export const addNewScreen = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Fail to add a new screen, try later!", data: null });
         return;
     }
+}
+
+
+export const getAllScreens = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(500).json({ message: "Something went wrong, try later!", data: null });
+            return;
+        }
+
+        const screens = await Screen.find({ cinemaId: cinema._id });
+
+        res.status(200).json({ message: "Successfully load all screens!", data: screens });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: "Fail to load screens, try later!", data: null });
+        return;
+    }
+
 }
