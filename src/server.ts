@@ -6,6 +6,7 @@ dotenv.config();
 
 import authRouter from './routes/authRoute'
 import screenRouter from './routes/screenRoute'
+import movieRouter from './routes/movieRoute'
 
 const dbUrl = process.env.DATABASE_URL as string;
 
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/screen', screenRouter);
+app.use('/api/v1/movie', movieRouter);
 
 mongoose.connect(dbUrl)
     .then(() => {
