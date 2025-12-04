@@ -13,6 +13,8 @@ export interface IShowtime extends Document {
     screenId: mongoose.Types.ObjectId
     movieId: mongoose.Types.ObjectId
     cinemaId: mongoose.Types.ObjectId
+    ticketPrices: {}
+    seats: {}[][]
     status: ShowtimeStatus
     createdAt?: Date
     updatedAt?: Date
@@ -24,6 +26,8 @@ const showtimeSchema = new Schema<IShowtime>({
     screenId: { type: Schema.Types.ObjectId, ref: 'Screen', required: true },
     movieId: { type: Schema.Types.ObjectId, ref: 'Movie', required: true },
     cinemaId: { type: Schema.Types.ObjectId, ref: 'Cinema', required: true },
+    ticketPrices: { type: {}, required: true, default: null },
+    seats: { type: [{}], required: true, default: null },
     status: { type: String, enum: Object.values(ShowtimeStatus), required: true}
 },
     {

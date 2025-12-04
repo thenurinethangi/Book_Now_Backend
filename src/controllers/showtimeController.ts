@@ -4,6 +4,7 @@ import { Cinema } from "../models/Cinema";
 import { Showtime, ShowtimeStatus } from "../models/Showtime";
 import { Booking } from "../models/Booking";
 import { Movie } from "../models/Movie";
+import { Screen } from "../models/Screen";
 
 export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
 
@@ -183,3 +184,65 @@ function getShowtimeRange(dateString: string, startTime: string, durationMinutes
     return { start, end };
 }
 
+
+
+export const addANewShowtime = async (req: AuthRequest, res: Response) => {
+
+    let { date, time, screenId, movieId, ticketPrices, format } = req.body;
+
+    console.log(req.body);
+
+    if (!date || !time || !screenId || !movieId || !ticketPrices || !format) {
+        res.status(400).json({ message: "Incomplete data provide!", data: null });
+        return;
+    }
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const movie = await Movie.findOne({ _id: movieId });
+
+        if (!movie) {
+            res.status(404).json({ message: "Movie not found!", data: null });
+            return;
+        }
+
+        const screen = await Screen.findOne({ _id: screenId });
+
+        if (!screen) {
+            res.status(404).json({ message: "Screen not found!", data: null });
+            return;
+        }
+
+        const d = combineDateTimeSL(date, time);
+
+        const newShowtime = new Showtime({
+            date: d,
+            time: d,
+            screenId: screen._id,
+            movieId: movie._id,
+            cinemaId: cinema._id,
+            ticketPrices,
+            seats: screen.seatLayout,
+            status: ShowtimeStatus.SCHEDULED
+        });
+
+        const savedShowtime = await newShowtime.save();
+
+        res.status(200).json({ message: `Successfully add new showtime!`, data: savedShowtime });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to add new showtime!`, data: null });
+        return;
+    }
+}
+
+function combineDateTimeSL(dateStr: string, timeStr: string) {
+    return new Date(`${dateStr}T${timeStr}:00`);
+}
