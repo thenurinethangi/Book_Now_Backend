@@ -8,6 +8,7 @@ import authRouter from './routes/authRoute'
 import screenRouter from './routes/screenRoute'
 import movieRouter from './routes/movieRoute'
 import showtimeRouter from './routes/showtimeRoute'
+import bookingRouter from './routes/bookingRoute'
 
 const dbUrl = process.env.DATABASE_URL as string;
 
@@ -27,6 +28,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/screen', screenRouter);
 app.use('/api/v1/movie', movieRouter);
 app.use('/api/v1/showtime', showtimeRouter);
+app.use('/api/v1/booking', bookingRouter);
 
 mongoose.connect(dbUrl)
     .then(() => {
