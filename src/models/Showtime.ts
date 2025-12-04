@@ -31,4 +31,13 @@ const showtimeSchema = new Schema<IShowtime>({
     }
 );
 
+showtimeSchema.virtual('bookings', {
+  ref: 'Booking',
+  localField: '_id',
+  foreignField: 'showtimeId'
+});
+
+showtimeSchema.set('toObject', { virtuals: true });
+showtimeSchema.set('toJSON', { virtuals: true });
+
 export const Showtime = mongoose.model<IShowtime>('Showtime', showtimeSchema);

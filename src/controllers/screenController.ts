@@ -169,3 +169,26 @@ export const updateScreenStatus = async (req: AuthRequest, res: Response) => {
     }
 
 }
+
+
+export const getCinemaAllAvaiableScreens = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(500).json({ message: "Something went wrong, try later!", data: null });
+            return;
+        }
+
+        const screens = await Screen.find({ cinemaId: cinema._id, status: ScreenStatus.ACTIVE });
+
+        res.status(200).json({ message: "Successfully load all available screens!", data: screens });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: "Fail to load screens, try later!", data: null });
+        return;
+    }
+
+}

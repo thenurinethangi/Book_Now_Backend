@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
 import { CinemaMovie } from "../models/CinemaMovie";
-import { Movie } from "../models/Movie";
+import { Movie, MovieStatus } from "../models/Movie";
 import cloudinary from "../config/cloudinaryConfig";
 import { RequestMovie, RequestStatus } from "../models/RequestMovie";
 
@@ -190,6 +190,41 @@ export const addMovieRequest = async (req: AuthRequest, res: Response) => {
     }
     catch (e) {
         res.status(500).json({ message: `Fail to request movie!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getCinemaAllAvailableMovie = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const cinemaMovies = await CinemaMovie.find({ cinemaId: cinema._id, status: {$ne: MovieStatus.NOT_SHOWING} });
+
+        const movieIds = cinemaMovies.map(cm => cm.movieId);
+
+        const movies = await Movie.find({ _id: { $in: movieIds } });
+
+        const movielist = cinemaMovies.map(cinemaMovie => {
+            const movie = movies.find(m => m._id.toString() === cinemaMovie.movieId.toString());
+            return {
+                ...cinemaMovie.toObject(),
+                movieDetails: movie?.toObject() || null
+            };
+        });
+
+        res.status(200).json({ message: "Successfully load all movies!", data: movielist });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load movies!`, data: null });
         return;
     }
 
