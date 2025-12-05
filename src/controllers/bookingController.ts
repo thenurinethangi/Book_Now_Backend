@@ -50,9 +50,7 @@ export const getCinemaAllBookings = async (req: AuthRequest, res: Response) => {
             });
         }
 
-        console.log(bookings);
-        return res.status(200).json({ message: "Load all bookings successfully.", data: bookings });
-
+        return res.status(200).json({ message: "Load all bookings successfully.", data: arr });
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load booking!`, data: null });
