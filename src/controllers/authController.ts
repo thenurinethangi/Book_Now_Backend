@@ -126,7 +126,7 @@ export const signUpCinema = async (req: Request, res: Response) => {
 
 export const signIn = async (req: Request, res: Response) => {
 
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
         res.status(400).json({ message: "All fields required!", data: null });
@@ -134,7 +134,7 @@ export const signIn = async (req: Request, res: Response) => {
     }
 
     try {
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ email: email, roles: [role] });
 
         if (!user) {
             res.status(404).json({ message: "User not found, please sign up!", data: null });
