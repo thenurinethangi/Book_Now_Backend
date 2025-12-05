@@ -57,3 +57,92 @@ export const getCinemaAllBookings = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const getCinemaTodayBooking = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id });
+
+        let showtimeIds = [];
+        for (let i = 0; i < showtimes.length; i++) {
+            const e = showtimes[i];
+            showtimeIds.push(e._id);
+        }
+
+        const { start, end } = getTodayRange();
+        const bookingToday = await Booking.find({ showtimeId: { $in: showtimeIds }, date: { $gte: start, $lte: end } });
+
+        const { start2, end2 } = getYesterdayRange();
+        const bookingYesterday = await Booking.find({ showtimeId: { $in: showtimeIds }, date: { $gte: start2, $lte: end2 } });
+
+        const change = getBookingChange(bookingToday.length, bookingYesterday.length);
+
+        const data = {
+            todayBooking: bookingToday.length,
+            yesterdayBooking: bookingYesterday.length,
+            change
+        }
+
+        return res.status(200).json({ message: "Load all today booking successfully.", data: data });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load today booking!`, data: null });
+        return;
+    }
+}
+
+function getTodayRange() {
+    const now = new Date();
+
+    const start = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        0, 0, 0, 0
+    );
+
+    const end = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        23, 59, 59, 999
+    );
+
+    return { start, end };
+}
+
+function getYesterdayRange() {
+    const now = new Date();
+
+    const start2 = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - 1,
+        0, 0, 0, 0
+    );
+
+    const end2 = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - 1,
+        23, 59, 59, 999
+    );
+
+    return { start2, end2 };
+}
+
+function getBookingChange(today: number, yesterday: number): number {
+    if (yesterday === 0) {
+        return today === 0 ? 0 : 100;
+    }
+
+    return ((today - yesterday) / yesterday) * 100;
+}

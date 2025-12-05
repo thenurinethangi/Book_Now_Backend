@@ -192,3 +192,40 @@ export const getCinemaAllAvaiableScreens = async (req: AuthRequest, res: Respons
     }
 
 }
+
+
+export const getCinemaScreensStats = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(500).json({ message: "Something went wrong, try later!", data: null });
+            return;
+        }
+
+        const allScreens = await Screen.find({ cinemaId: cinema._id });
+        const activeScreens = await Screen.find({ cinemaId: cinema._id, status: ScreenStatus.ACTIVE });
+
+        const change = getActiveScreenPercentage(allScreens.length, activeScreens.length);
+
+        const data = {
+            allScreens: allScreens.length,
+            activeScreens: activeScreens.length,
+            change
+        }
+
+        res.status(200).json({ message: "Successfully load screens stats!", data: data });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: "Fail to load screens stats!", data: null });
+        return;
+    }
+
+}
+
+function getActiveScreenPercentage(active: number, total: number): number {
+    if (total === 0) return 0;  
+    return (active / total) * 100;
+}
