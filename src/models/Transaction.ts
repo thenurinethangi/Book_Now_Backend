@@ -12,6 +12,7 @@ export interface ITransaction extends Document {
     amount: string
     userId: mongoose.Types.ObjectId
     bookingId: mongoose.Types.ObjectId
+    cinemaId: mongoose.Types.ObjectId
     status: TransactionStatus
     createdAt?: Date
     updatedAt?: Date
@@ -22,6 +23,7 @@ const transactionSchema = new Schema<ITransaction>({
     amount: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true },
+    cinemaId: { type: Schema.Types.ObjectId, ref: 'Cinema', required: true },
     status: { type: String, enum: Object.values(TransactionStatus), required: true }
 },
     {
