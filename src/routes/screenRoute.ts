@@ -1,5 +1,5 @@
 import express from 'express';
-import { addNewScreen, deleteAScreen, getAllActiveScreensForAdmin, getAllDeactiveScreensForAdmin, getAllScreens, getCinemaAllAvaiableScreens, getCinemaScreensStats, updateScreenStatus } from '../controllers/screenController';
+import { activateAScreenForAdmin, addNewScreen, deactivateAScreenForAdmin, deleteAScreen, getAllActiveScreensForAdmin, getAllDeactiveScreensForAdmin, getAllScreens, getCinemaAllAvaiableScreens, getCinemaScreensStats, updateScreenStatus } from '../controllers/screenController';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
@@ -22,5 +22,9 @@ router.get('/cinema/stats', authenticate, authorize([Role.CINEMA]), getCinemaScr
 router.get('/admin/active/all', authenticate, authorize([Role.ADMIN]), getAllActiveScreensForAdmin);
 
 router.get('/admin/deactive/all', authenticate, authorize([Role.ADMIN]), getAllDeactiveScreensForAdmin);
+
+router.put('/admin/deactive/:id', authenticate, authorize([Role.ADMIN]), deactivateAScreenForAdmin);
+
+router.put('/admin/active/:id', authenticate, authorize([Role.ADMIN]), activateAScreenForAdmin);
 
 export default router;

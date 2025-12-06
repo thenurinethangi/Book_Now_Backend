@@ -265,3 +265,49 @@ export const getAllDeactiveScreensForAdmin = async (req: AuthRequest, res: Respo
         return;
     }
 }
+
+
+export const deactivateAScreenForAdmin = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    try {
+        const result = await Screen.updateOne({ _id: id }, { $set: { status: ScreenStatus.DEACTIVE } });
+
+        if (result.modifiedCount === 1) {
+            res.status(200).json({ message: `Successfully deactivated a screen!`, data: null });
+            return;
+        }
+        else {
+            res.status(401).json({ message: `Fail to deactivate a screen!`, data: null });
+            return;
+        }
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to deactivate a screen!`, data: null });
+        return;
+    }
+}
+
+
+export const activateAScreenForAdmin = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    try {
+        const result = await Screen.updateOne({ _id: id }, { $set: { status: ScreenStatus.ACTIVE } });
+
+        if (result.modifiedCount === 1) {
+            res.status(200).json({ message: `Successfully activated a screen!`, data: null });
+            return;
+        }
+        else {
+            res.status(401).json({ message: `Fail to activate a screen!`, data: null });
+            return;
+        }
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to activate a screen!`, data: null });
+        return;
+    }
+}
