@@ -226,6 +226,42 @@ export const getCinemaScreensStats = async (req: AuthRequest, res: Response) => 
 }
 
 function getActiveScreenPercentage(active: number, total: number): number {
-    if (total === 0) return 0;  
+    if (total === 0) return 0;
     return (active / total) * 100;
+}
+
+
+export const getAllActiveScreensForAdmin = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const screens = await Screen.find({ status: { $ne: ScreenStatus.DEACTIVE } })
+            .populate('cinemaId');
+
+
+        res.status(200).json({ message: `Successfully load all active screens!`, data: screens });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all active screens!`, data: null });
+        return;
+    }
+}
+
+
+export const getAllDeactiveScreensForAdmin = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const screens = await Screen.find({ status: { $eq: ScreenStatus.DEACTIVE } })
+            .populate('cinemaId');
+
+
+        res.status(200).json({ message: `Successfully load all deactive screens!`, data: screens });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all deactive screens!`, data: null });
+        return;
+    }
 }

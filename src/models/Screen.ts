@@ -4,7 +4,8 @@ export enum ScreenStatus{
     ACTIVE = 'ACTIVE',
     UNAVAILABLE = 'UNAVAILABLE',
     MAINTENANCE = 'MAINTENANCE',
-    CLOSED = 'CLOSED'
+    CLOSED = 'CLOSED',
+    DEACTIVE = 'DEACTIVE'
 }
 
 export interface IScreen extends Document {
@@ -13,7 +14,7 @@ export interface IScreen extends Document {
     description: string
     numberOfSeats: string
     screenTypes: string[]
-    seatTypes: string[]
+    seatTypes: string[] 
     seatLayout: {}[][]
     screenImageUrl: string
     cinemaId: mongoose.Types.ObjectId
