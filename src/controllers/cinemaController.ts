@@ -34,7 +34,37 @@ export const getAllActiveCinemas = async (req: AuthRequest, res: Response) => {
         return;
     }
     catch (e) {
-        res.status(500).json({ message: `Fail to laod active cinema!`, data: null });
+        res.status(500).json({ message: `Fail to load active cinema!`, data: null });
+        return;
+    }
+}
+
+
+export const getAllPendingCinemas = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const pendingCinemas = await Cinema.find({ status: CinemaStatus.PENDING });
+
+        res.status(200).json({ message: `Successfully load all pending cinemas!`, data: pendingCinemas });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load pending cinema!`, data: null });
+        return;
+    }
+}
+
+
+export const getAllRejectedCinemas = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const rejectedCinemas = await Cinema.find({ status: CinemaStatus.REJECTED });
+
+        res.status(200).json({ message: `Successfully load all rejected cinemas!`, data: rejectedCinemas });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load rejected cinema!`, data: null });
         return;
     }
 }
