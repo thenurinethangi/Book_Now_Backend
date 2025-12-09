@@ -5,6 +5,9 @@ import { CinemaMovie } from "../models/CinemaMovie";
 import { Movie, MovieStatus } from "../models/Movie";
 import cloudinary from "../config/cloudinaryConfig";
 import { RequestMovie, RequestStatus } from "../models/RequestMovie";
+import { Booking } from "../models/Booking";
+import { Showtime } from "../models/Showtime";
+import { approveMovieRequest } from "./requestMovieController";
 
 export const getAllCinemaMovies = async (req: AuthRequest, res: Response) => {
 
@@ -206,7 +209,7 @@ export const getCinemaAllAvailableMovie = async (req: AuthRequest, res: Response
             return;
         }
 
-        const cinemaMovies = await CinemaMovie.find({ cinemaId: cinema._id, status: {$ne: MovieStatus.NOT_SHOWING} });
+        const cinemaMovies = await CinemaMovie.find({ cinemaId: cinema._id, status: { $ne: MovieStatus.NOT_SHOWING } });
 
         const movieIds = cinemaMovies.map(cm => cm.movieId);
 
@@ -225,6 +228,212 @@ export const getCinemaAllAvailableMovie = async (req: AuthRequest, res: Response
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load movies!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getAllManagedMoviesForAdmin = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const movies = await Movie.find();
+
+        let arr = [];
+        for (let i = 0; i < movies.length; i++) {
+            const e = movies[i];
+
+            const cinemas = await CinemaMovie.find({ movieId: e._id }).populate('cinemaId');
+
+            const showtimes = await Showtime.find({ movieId: e._id });
+            let ids = [];
+            for (let j = 0; j < showtimes.length; j++) {
+                const a = showtimes[j];
+                ids.push(a._id);
+            }
+
+            const bookings = await Booking.find({ showtimeId: { $in: ids } });
+
+            arr.push({ movie: e, cinemas: cinemas, bookings: bookings.length });
+        }
+
+        res.status(200).json({ message: "Successfully load all managed movies!", data: arr });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all managed movies!`, data: null });
+        return;
+    }
+
+}
+
+
+export const changeMovieStatusForAdmin = async (req: AuthRequest, res: Response) => {
+
+    const { id, status } = req.body;
+
+    if (!id || !status) {
+        res.status(400).json({ message: `Incomplete data provided!`, data: null });
+        return;
+    }
+
+    try {
+        if (status === 'Now Showing') {
+            const result = await Movie.updateOne({ _id: id }, { status: MovieStatus.NOW_SHOWING });
+            if (result.modifiedCount === 1) {
+                res.status(200).json({ message: "Successfully updated the movie status!", data: null });
+                return;
+            }
+        }
+        else if (status === 'Coming Soon') {
+            const result = await Movie.updateOne({ _id: id }, { status: MovieStatus.COMING_SOON });
+            if (result.modifiedCount === 1) {
+                res.status(200).json({ message: "Successfully updated the movie status!", data: null });
+                return;
+            }
+        }
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to update the movie status!`, data: null });
+        return;
+    }
+
+}
+
+
+export const checkMovieInCinemasManageMovieList = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(401).json({ message: `Movie id not provided!`, data: null });
+        return;
+    }
+
+    try {
+        const cinemaMovies = await CinemaMovie.find({ movieId: id });
+
+        res.status(200).json({ message: "Successfully check movie in cinemas movie list!", data: cinemaMovies.length });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to update the movie status!`, data: null });
+        return;
+    }
+
+}
+
+
+export const deleteAMovie = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).json({ message: `Movie id not provided!`, data: null });
+        return;
+    }
+
+    try {
+        const result = await CinemaMovie.deleteOne({ movieId: id });
+
+        if (result.deletedCount >= 1) {
+            res.status(200).json({ message: "Successfully delete the movie!", data: null });
+            return;
+        }
+        res.status(500).json({ message: `Fail to delete the movie!`, data: null });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to delete the movie!`, data: null });
+        return;
+    }
+
+}
+
+
+export const addNewMovieForAdmin = async (req: AuthRequest, res: Response) => {
+
+    const { id, title, description, releaseDate, duration, originalLanguage, genres, formats, directors, production,
+        trailerUrl, ageRating, imdbRating, rtRating, status } = req.body;
+
+    if (!id || !title || !description || !releaseDate || !duration || !originalLanguage || !genres || !formats || !directors || !trailerUrl || !ageRating || !status) {
+        res.status(400).json({ message: `Incomplete data provided for adding a new movie.!`, data: null });
+        return;
+    }
+
+    const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+    };
+
+    let posterImageUrl = "";
+    let bannerImageUrl = "";
+
+    const uploadToCloudinary = (fileBuffer: Buffer): Promise<any> => {
+        return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                { folder: "movie" },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                }
+            );
+            uploadStream.end(fileBuffer);
+        });
+    };
+
+    if (files?.posterImageUrl?.[0]) {
+        const result = await uploadToCloudinary(files.posterImageUrl[0].buffer);
+        posterImageUrl = result.secure_url;
+    }
+
+    if (files?.bannerImageUrl?.[0]) {
+        const result = await uploadToCloudinary(
+            files.bannerImageUrl[0].buffer
+        );
+        bannerImageUrl = result.secure_url;
+    }
+
+    try {
+        const existingMoviesWithSameName = await Movie.find({ title: title });
+        if (existingMoviesWithSameName.length > 0) {
+            res.status(400).json({ message: `This movie already exist in managed movie list. so can't add again!`, data: null });
+            return;
+        }
+
+        const result = await approveMovieRequest(id);
+        if (!result) {
+            res.status(500).json({ message: `Unable to set status 'Approved' fro movie request!`, data: null });
+            return;
+        }
+
+        const newMovie = new Movie({
+            title,
+            description,
+            releaseDate: new Date(releaseDate),
+            duration,
+            originalLanguage,
+            genres: JSON.parse(genres),
+            formats: JSON.parse(formats),
+            directors: JSON.parse(directors),
+            production: JSON.parse(production),
+            posterImageUrl,
+            bannerImageUrl,
+            trailerUrl,
+            ageRating,
+            ratings: {
+                imdb: imdbRating,
+                rottenTomatoes: rtRating
+            },
+            status
+        });
+
+        const savedMovie = await newMovie.save();
+
+        res.status(200).json({ message: `Successfully added new movie!`, data: savedMovie });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to delete the movie!`, data: null });
         return;
     }
 
