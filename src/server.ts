@@ -13,6 +13,7 @@ import transactionRouter from './routes/transactionRoute'
 import cinemaRouter from './routes/cinemaRoute'
 import requestMovieRoute from './routes/requestMovieRoute'
 import userRoute from './routes/userRoute'
+import heroRoute from './routes/heroRoute'
 
 const dbUrl = process.env.DATABASE_URL as string;
 
@@ -37,6 +38,7 @@ app.use('/api/v1/transaction', transactionRouter);
 app.use('/api/v1/cinema', cinemaRouter);
 app.use('/api/v1/movieRequest', requestMovieRoute);
 app.use('/api/v1/user', userRoute);
+app.use('/api/v1/hero', heroRoute);
 
 mongoose.connect(dbUrl)
     .then(() => {
