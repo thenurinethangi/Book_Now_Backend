@@ -146,7 +146,7 @@ export const signIn = async (req: Request, res: Response) => {
             return;
         }
 
-        if(!user.isVerified){
+        if (!user.isVerified) {
             res.status(401).json({ message: "Authentication failed, verify your email!", data: user });
             return;
         }
@@ -156,7 +156,7 @@ export const signIn = async (req: Request, res: Response) => {
 
         res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
 
-        res.status(200).json({ message: "Successfully sign in!", data: accessToken});
+        res.status(200).json({ message: "Successfully sign in!", data: accessToken });
         return;
     }
     catch (e) {
@@ -245,4 +245,47 @@ export const verifyUser = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Failed to verify user!", data: null });
         return;
     }
+}
+
+
+export const signUpUser = async (req: Request, res: Response) => {
+
+    const { email, password, firstName, lastName, mobile, dateOfBirth, postCode, gender, primaryCinema } = req.body;
+
+    if (!email || !password || !firstName || !lastName || !mobile || !dateOfBirth || !postCode || !gender || !primaryCinema) {
+        res.status(400).json({ message: "Incomplete data provided for register user!", data: null });
+        return;
+    }
+
+    try {
+        const newUser = new User({
+            email: email,
+            password: password,
+            firstName: firstName,
+            lastName: lastName,
+            dateOfBirth: getDateOfBirth(dateOfBirth),
+            mobile: mobile,
+            postCode: postCode,
+            gender: gender,
+            primaryCinema: primaryCinema,
+            roles: [Role.USER],
+            isVerified: false,
+            status: Status.ACITIVE,
+        });
+
+        const savedUser = await newUser.save();
+
+        res.status(200).json({ message: "User Sign Up Successfull!", data: savedUser });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: "User Sign Up Fail!", data: null });
+        return;
+    }
+};
+
+function getDateOfBirth(date: string) {
+    const [month, year] = date.split("/");
+    const dateObj = new Date(Number(year), Number(month) - 1);
+    return dateObj;
 }

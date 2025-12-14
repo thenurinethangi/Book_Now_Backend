@@ -20,4 +20,6 @@ router.put('/reject/:id',authenticate,authorize([Role.ADMIN]),rejectACinema);
 
 router.delete('/rejected/delete/:id',authenticate,authorize([Role.ADMIN]),deleteRejectedCinema);
 
+router.get('/active/all',getAllActiveCinemas);
+
 export default router;

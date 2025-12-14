@@ -77,7 +77,7 @@ export const addNewHeroPoster = async (req: AuthRequest, res: Response) => {
 }
 
 
-export const getAllHeroPosters = async (req: AuthRequest, res: Response) => {
+export const getAllHeroPostersForAdmin = async (req: AuthRequest, res: Response) => {
 
     try {
         const posters = await Hero.find().populate('movieId');
@@ -113,6 +113,36 @@ export const deleteAHeroPoster = async (req: AuthRequest, res: Response) => {
     }
     catch (e) {
         res.status(500).json({ message: `Fail to delete the hero poster!`, data: null });
+        return;
+    }
+}
+
+
+export const getAllHeroPosters = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const posters = await Hero.find().populate('movieId');
+
+        let arr = [];
+        for (let i = 0; i < posters.length; i++) {
+            const e: any = posters[i];
+
+            const data = {
+                movieId: e.movieId._id,
+                image: e.imageUrl,
+                trailer: e.videoUrl,
+                title: e.movieId.title,
+                description: e.description,
+                status: e.movieId.status
+            }
+            arr.push(data);
+        }
+
+        res.status(200).json({ message: `Successfully load all hero poster!`, data: arr });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all hero poster!`, data: null });
         return;
     }
 }

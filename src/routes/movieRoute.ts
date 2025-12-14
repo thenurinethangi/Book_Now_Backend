@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { addMovieRequest, addMovieToCinemaMovieList, addNewMovieForAdmin, changeMovieStatusForAdmin, checkMovieInCinemasManageMovieList, deleteAMovie, fuck, getAllAvailableMoviesOfCinemaToAdd, getAllCinemaMovies, getAllManagedMoviesForAdmin, getCinemaAllAvailableMovie, getMovieAvailableFormats } from '../controllers/movieController';
+import { addMovieRequest, addMovieToCinemaMovieList, addNewMovieForAdmin, changeMovieStatusForAdmin, checkMovieInCinemasManageMovieList, deleteAMovie, fuck, getAllAvailableMoviesOfCinemaToAdd, getAllCinemaMovies, getAllComingSoonMovies, getAllManagedMoviesForAdmin, getAllNowShowingMovies, getCinemaAllAvailableMovie, getMovieAvailableFormats, getMovieDetails } from '../controllers/movieController';
 import { upload } from '../middlewares/upload';
 
 const router = express.Router();
@@ -28,5 +28,11 @@ router.get('/admin/check/cinema/use/:id', authenticate, authorize([Role.ADMIN]),
 router.delete('/admin/delete/:id', authenticate, authorize([Role.ADMIN]), deleteAMovie);
 
 router.post('/admin/add', authenticate, authorize([Role.ADMIN]), upload.fields([{ name: 'posterImageUrl', maxCount: 1 }, { name: 'bannerImageUrl', maxCount: 1 }]), addNewMovieForAdmin);
+
+router.get('/nowShowing/all', getAllNowShowingMovies);
+
+router.get('/comingSoon/all', getAllComingSoonMovies);
+
+router.get('/:id', getMovieDetails);
 
 export default router;

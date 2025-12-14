@@ -354,9 +354,9 @@ export const deleteAMovie = async (req: AuthRequest, res: Response) => {
 export const addNewMovieForAdmin = async (req: AuthRequest, res: Response) => {
 
     const { id, title, description, releaseDate, duration, originalLanguage, genres, formats, directors, production,
-        trailerUrl, ageRating, imdbRating, rtRating, status } = req.body;
+        cast, trailerUrl, ageRating, imdbRating, rtRating, status } = req.body;
 
-    if (!id || !title || !description || !releaseDate || !duration || !originalLanguage || !genres || !formats || !directors || !trailerUrl || !ageRating || !status) {
+    if (!id || !title || !description || !releaseDate || !duration || !originalLanguage || !genres || !formats || !directors || !cast || !trailerUrl || !ageRating || !status) {
         res.status(400).json({ message: `Incomplete data provided for adding a new movie.!`, data: null });
         return;
     }
@@ -416,6 +416,7 @@ export const addNewMovieForAdmin = async (req: AuthRequest, res: Response) => {
             formats: JSON.parse(formats),
             directors: JSON.parse(directors),
             production: JSON.parse(production),
+            cast: JSON.parse(cast),
             posterImageUrl,
             bannerImageUrl,
             trailerUrl,
@@ -434,6 +435,61 @@ export const addNewMovieForAdmin = async (req: AuthRequest, res: Response) => {
     }
     catch (e) {
         res.status(500).json({ message: `Fail to delete the movie!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getAllNowShowingMovies = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const movies = await Movie.find({ status: MovieStatus.NOW_SHOWING });
+
+        res.status(200).json({ message: "Successfully load all Now Showing movies!", data: movies });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all Now Showing movies!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getAllComingSoonMovies = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const movies = await Movie.find({ status: MovieStatus.COMING_SOON });
+
+        res.status(200).json({ message: "Successfully load all Coming Soon movies!", data: movies });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load all Coming Soon movies!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getMovieDetails = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+    
+    if(!id){
+        res.status(400).json({ message: "Movie ID not provided!", data: null });
+        return;
+    }
+
+    try {
+        const movie = await Movie.findOne({ _id: id });
+
+        res.status(200).json({ message: "Successfully load movie details!", data: movie });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load movie deatils!`, data: null });
         return;
     }
 

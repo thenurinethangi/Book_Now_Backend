@@ -17,6 +17,7 @@ export interface IMovie extends Document {
     formats: string[]
     directors: string[]
     production?: string[]
+    cast: string[]
     posterImageUrl: string
     bannerImageUrl: string
     trailerUrl: string
@@ -40,6 +41,7 @@ const movieSchema = new Schema<IMovie>({
     formats: { type: [String], required: true }, 
     directors: { type: [String], required: true },
     production: { type: [String], default: [] },
+    cast: { type: [String], required: true },
     posterImageUrl: { type: String, required: true },
     bannerImageUrl: { type: String, required: true },
     trailerUrl: { type: String, required: true },

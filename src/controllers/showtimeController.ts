@@ -130,7 +130,6 @@ function formatTime(dateString: string) {
 }
 
 
-
 export const checkShowtimeAlreadyExist = async (req: AuthRequest, res: Response) => {
 
     const { date, time, screen: screenId, movie: movieId } = req.body;
@@ -245,4 +244,121 @@ export const addANewShowtime = async (req: AuthRequest, res: Response) => {
 
 function combineDateTimeSL(dateStr: string, timeStr: string) {
     return new Date(`${dateStr}T${timeStr}:00`);
+}
+
+
+export const getAllShowtimesOfAMovie = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const movieId = req.params.movieId;
+
+        const toSLTime = (date: Date) =>
+            new Date(date.toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
+
+        const todaySL = toSLTime(new Date());
+
+        const daysArray: any[][][] = [];
+
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(todaySL);
+            day.setDate(todaySL.getDate() + i);
+
+            const startOfDaySL = new Date(
+                day.getFullYear(),
+                day.getMonth(),
+                day.getDate(),
+                0, 0, 0
+            );
+
+            const endOfDaySL = new Date(
+                day.getFullYear(),
+                day.getMonth(),
+                day.getDate(),
+                23, 59, 59
+            );
+
+            const startUTC = new Date(startOfDaySL.toISOString());
+            const endUTC = new Date(endOfDaySL.toISOString());
+
+            const showtimes = await Showtime.find({
+                movieId,
+                date: {
+                    $gte: startUTC,
+                    $lte: endUTC
+                }
+            })
+                .populate('cinemaId')
+                .populate('screenId');
+
+            const screenGroups: { [key: string]: any[] } = {};
+
+            showtimes.forEach(st => {
+                const screenId = st.screenId?._id?.toString();
+
+                if (!screenGroups[screenId]) {
+                    screenGroups[screenId] = [];
+                }
+
+                screenGroups[screenId].push(st);
+            });
+
+            daysArray.push(Object.values(screenGroups));
+        }
+
+        return res.status(200).json({
+            message: "Showtimes fetched successfully",
+            data: daysArray
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Server error", data: null });
+    }
+};
+
+
+export const getShowtimeDetailsById = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).json({ message: "Showtime ID not provided!", data: null });
+        return;
+    }
+
+    try {
+        const showtime = await Showtime.findOne({ _id: id })
+            .populate('movieId')
+            .populate('screenId')
+            .populate('cinemaId');
+
+        res.status(200).json({ message: `Successfully load selected showtime details!`, data: showtime });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load selected shomtime details!`, data: null });
+        return;
+    }
+}
+
+
+export const getUnavailableSeats = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).json({ message: "Showtime ID not provided!", data: null });
+        return;
+    }
+
+    try {
+        const bookings = await Booking.find({showtimeId: id});
+
+        res.status(200).json({ message: `Successfully load bookings for showtime!`, data: bookings });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load bookings for shomtime!`, data: null });
+        return;
+    }
 }
