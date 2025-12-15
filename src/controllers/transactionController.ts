@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
-import { Transaction } from "../models/Transaction";
+import { Transaction, TransactionStatus } from "../models/Transaction";
 import { Booking } from "../models/Booking";
 import { Showtime } from "../models/Showtime";
 
@@ -338,6 +338,46 @@ export const getShowtimeDetailsByPaymentId = async (req: AuthRequest, res: Respo
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load this week revenue!`, data: null });
+        return;
+    }
+}
+
+
+export const deleteTransactionAndBookingIfErrorInBooking = async (req: AuthRequest, res: Response) => {
+
+    const transactionId = req.params.transactionId;
+
+    try {
+        const transaction = await Transaction.findOne({ _id: transactionId });
+
+        if (!transaction) {
+            res.status(404).json({ message: "Transaction not found!", data: null });
+            return;
+        }
+
+        const booking = await Booking.findOne({ _id: transaction.bookingId });
+
+        if (!booking) {
+            res.status(404).json({ message: "Booking not found!", data: null });
+            return;
+        }
+
+        if (transaction.status === TransactionStatus.PENDING) {
+            const isTransactionDelete = await Transaction.deleteOne({ _id: transaction._id });
+            const isBookingDelete = await Booking.deleteOne({ _id: booking._id });
+
+            if (isBookingDelete.deletedCount > 0 && isTransactionDelete.deletedCount > 0) {
+                return res.status(200).json({ message: "Successfully deleted both transaction and booking for failed booking.", data: null });
+            }
+            else {
+                return res.status(500).json({ message: "Fail to delete both transaction and booking for failed booking.", data: null });
+            }
+        }
+
+        return res.status(400).json({ message: "You can't delete Non Pending transactions.", data: null });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to delete both transaction and booking for failed booking!`, data: null });
         return;
     }
 }
