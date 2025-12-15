@@ -2,6 +2,8 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
 import { Transaction } from "../models/Transaction";
+import { Booking } from "../models/Booking";
+import { Showtime } from "../models/Showtime";
 
 export const getCinemaAllTransaction = async (req: AuthRequest, res: Response) => {
 
@@ -297,4 +299,45 @@ function formatDateListToDayMonth(list: any) {
         const [month, day] = formatted.split(" ");
         return `${day} ${month}`;
     });
+}
+
+
+export const getShowtimeDetailsByPaymentId = async (req: AuthRequest, res: Response) => {
+
+    const transactionId = req.params.transactionId;
+
+    try {
+        const transaction = await Transaction.findOne({ _id: transactionId });
+
+        if (!transaction) {
+            res.status(404).json({ message: "Transaction not found!", data: null });
+            return;
+        }
+
+        const booking = await Booking.findOne({ _id: transaction.bookingId });
+
+        if (!booking) {
+            res.status(404).json({ message: "Booking not found!", data: null });
+            return;
+        }
+
+        const showtime = await Showtime.findOne({ _id: booking.showtimeId }).populate('movieId').populate('cinemaId').populate('screenId');
+
+        if (!showtime) {
+            res.status(404).json({ message: "Showtime not found!", data: null });
+            return;
+        }
+
+        const data = {
+            transaction,
+            booking,
+            showtime
+        }
+
+        return res.status(200).json({ message: "Load this week revenue.", data: data });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load this week revenue!`, data: null });
+        return;
+    }
 }

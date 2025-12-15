@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { getCinemaAllTransaction, getCinemaThisWeekRevenue, getCinemaTodayRevenue, getCinemaWholeYearRevenue } from '../controllers/transactionController';
+import { getCinemaAllTransaction, getCinemaThisWeekRevenue, getCinemaTodayRevenue, getCinemaWholeYearRevenue, getShowtimeDetailsByPaymentId } from '../controllers/transactionController';
 
 const router = express.Router();
 
@@ -13,5 +13,7 @@ router.get('/cinema/today/revenue', authenticate, authorize([Role.CINEMA]), getC
 router.get('/cinema/year/revenue', authenticate, authorize([Role.CINEMA]), getCinemaWholeYearRevenue);
 
 router.get('/cinema/week/revenue', authenticate, authorize([Role.CINEMA]), getCinemaThisWeekRevenue);
+
+router.get('/details/:transactionId', authenticate, authorize([Role.USER]), getShowtimeDetailsByPaymentId);
 
 export default router;
