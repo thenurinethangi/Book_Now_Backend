@@ -4,7 +4,8 @@ export enum BookingStatus {
     PAST = 'Past',
     TODAY = 'Today',
     SCHEDULED = 'Scheduled',
-    CANCELED = 'Canceled'
+    CANCELED = 'Canceled',
+    FAILED = 'Failed'
 }
 
 export interface IBooking extends Document {

@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { deleteTransactionAndBookingIfErrorInBooking, getCinemaAllTransaction, getCinemaThisWeekRevenue, getCinemaTodayRevenue, getCinemaWholeYearRevenue, getShowtimeDetailsByPaymentId } from '../controllers/transactionController';
+import { confirmTransactionAndBookingIfBookingComplete, deleteTransactionAndBookingIfErrorInBooking, getCinemaAllTransaction, getCinemaThisWeekRevenue, getCinemaTodayRevenue, getCinemaWholeYearRevenue, getShowtimeDetailsByPaymentId } from '../controllers/transactionController';
 
 const router = express.Router();
 
@@ -16,6 +16,8 @@ router.get('/cinema/week/revenue', authenticate, authorize([Role.CINEMA]), getCi
 
 router.get('/details/:transactionId', authenticate, authorize([Role.USER]), getShowtimeDetailsByPaymentId);
 
-router.delete('/failed/:transactionId', authenticate, authorize([Role.USER]), deleteTransactionAndBookingIfErrorInBooking);
+router.put('/failed/:transactionId', authenticate, authorize([Role.USER]), deleteTransactionAndBookingIfErrorInBooking);
+
+router.put('/success/:transactionId', authenticate, authorize([Role.USER]), confirmTransactionAndBookingIfBookingComplete);
 
 export default router;

@@ -2,7 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
 import { Transaction, TransactionStatus } from "../models/Transaction";
-import { Booking } from "../models/Booking";
+import { Booking, BookingStatus } from "../models/Booking";
 import { Showtime } from "../models/Showtime";
 
 export const getCinemaAllTransaction = async (req: AuthRequest, res: Response) => {
@@ -362,22 +362,62 @@ export const deleteTransactionAndBookingIfErrorInBooking = async (req: AuthReque
             return;
         }
 
-        if (transaction.status === TransactionStatus.PENDING) {
-            const isTransactionDelete = await Transaction.deleteOne({ _id: transaction._id });
-            const isBookingDelete = await Booking.deleteOne({ _id: booking._id });
+        if (transaction.status !== TransactionStatus.COMPLETED) {
+            const isTransactionDelete = await Transaction.updateOne({ _id: transaction._id }, { status: TransactionStatus.FAILED });
+            const isBookingDelete = await Booking.updateOne({ _id: booking._id }, { status: BookingStatus.FAILED });
 
-            if (isBookingDelete.deletedCount > 0 && isTransactionDelete.deletedCount > 0) {
-                return res.status(200).json({ message: "Successfully deleted both transaction and booking for failed booking.", data: null });
+            if (isBookingDelete.modifiedCount > 0 && isTransactionDelete.modifiedCount > 0) {
+                return res.status(200).json({ message: "Successfully change status of both transaction and booking for failed booking.", data: null });
             }
             else {
-                return res.status(500).json({ message: "Fail to delete both transaction and booking for failed booking.", data: null });
+                return res.status(500).json({ message: "Fail to change status of both transaction and booking for failed booking.", data: null });
             }
         }
 
-        return res.status(400).json({ message: "You can't delete Non Pending transactions.", data: null });
+        return res.status(400).json({ message: "You can't change status of none pending transaction.", data: null });
     }
     catch (e) {
-        res.status(500).json({ message: `Fail to delete both transaction and booking for failed booking!`, data: null });
+        res.status(500).json({ message: `Fail to chnage status of both transaction and booking for failed booking!`, data: null });
+        return;
+    }
+}
+
+
+export const confirmTransactionAndBookingIfBookingComplete = async (req: AuthRequest, res: Response) => {
+
+    const transactionId = req.params.transactionId;
+
+    try {
+        const transaction = await Transaction.findOne({ _id: transactionId });
+
+        if (!transaction) {
+            res.status(404).json({ message: "Transaction not found!", data: null });
+            return;
+        }
+
+        const booking = await Booking.findOne({ _id: transaction.bookingId });
+
+        if (!booking) {
+            res.status(404).json({ message: "Booking not found!", data: null });
+            return;
+        }
+
+        if (transaction.status !== TransactionStatus.FAILED) {
+            const isTransactionDelete = await Transaction.updateOne({ _id: transaction._id }, { status: TransactionStatus.COMPLETED });
+            const isBookingDelete = await Booking.updateOne({ _id: booking._id }, { status: BookingStatus.SCHEDULED });
+
+            if (isBookingDelete.modifiedCount > 0 && isTransactionDelete.modifiedCount > 0) {
+                return res.status(200).json({ message: "Successfully change status of both transaction and booking for success booking.", data: null });
+            }
+            else {
+                return res.status(500).json({ message: "Fail to change status of both transaction and booking for success booking.", data: null });
+            }
+        }
+
+        return res.status(400).json({ message: "You can't change status of failed transaction.", data: null });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to chnage status of both transaction and booking for success booking!`, data: null });
         return;
     }
 }

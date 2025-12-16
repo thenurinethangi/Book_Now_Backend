@@ -2,7 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
 import { Showtime, ShowtimeStatus } from "../models/Showtime";
-import { Booking } from "../models/Booking";
+import { Booking, BookingStatus } from "../models/Booking";
 import { Movie } from "../models/Movie";
 import { Screen } from "../models/Screen";
 
@@ -352,7 +352,7 @@ export const getUnavailableSeats = async (req: AuthRequest, res: Response) => {
     }
 
     try {
-        const bookings = await Booking.find({showtimeId: id});
+        const bookings = await Booking.find({ showtimeId: id, status: { $ne: BookingStatus.FAILED } });
 
         res.status(200).json({ message: `Successfully load bookings for showtime!`, data: bookings });
         return;
