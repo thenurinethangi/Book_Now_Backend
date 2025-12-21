@@ -305,9 +305,24 @@ export const getAllShowtimesOfAMovie = async (req: AuthRequest, res: Response) =
             daysArray.push(Object.values(screenGroups));
         }
 
+        const arr: any[][][] = [];
+        for (let i = 0; i < daysArray.length; i++) {
+            const day = daysArray[i];
+            for (let j = 0; j < day.length; j++) {
+                const screen = day[j];
+                for (let k = 0; k < screen.length; k++) {
+                    const st = screen[k];
+                    const bookings = await Booking.find({ showtimeId: st._id, status: { $ne: BookingStatus.FAILED } });
+                    console.log('bookings', bookings.length);
+                    st["bookings"] = bookings.length;
+                }
+            }
+            arr.push(day);
+        }
+
         return res.status(200).json({
             message: "Showtimes fetched successfully",
-            data: daysArray
+            data: arr
         });
 
     } catch (error) {

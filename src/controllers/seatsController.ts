@@ -86,7 +86,6 @@ export const checkLockedSeats = async (req: AuthRequest, res: Response) => {
                 const key = `seat_lock:${showId}:${seat.id}`;
                 console.log(key);
 
-                // Push the Redis get promise to array
                 seatPromises.push(
                     redis.get(key).then((lockData: any) => {
                         if (!lockData) {
@@ -99,7 +98,6 @@ export const checkLockedSeats = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Wait for all Redis queries in parallel
         const arr = await Promise.all(seatPromises);
         console.log('--------------------');
         console.log(arr);
