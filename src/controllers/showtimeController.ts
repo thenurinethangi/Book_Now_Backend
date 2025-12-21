@@ -311,10 +311,17 @@ export const getAllShowtimesOfAMovie = async (req: AuthRequest, res: Response) =
             for (let j = 0; j < day.length; j++) {
                 const screen = day[j];
                 for (let k = 0; k < screen.length; k++) {
-                    const st = screen[k];
+                    let st = screen[k];
+                    st = st.toObject();
                     const bookings = await Booking.find({ showtimeId: st._id, status: { $ne: BookingStatus.FAILED } });
-                    console.log('bookings', bookings.length);
-                    st["bookings"] = bookings.length;
+                    let count = 0;
+                    for (let l = 0; l < bookings.length; l++) {
+                        const book: any = bookings[l];
+                        count += book.seatsDetails.length;
+                    }
+                    console.log('bookings', count);
+                    st["bookings"] = count;
+                    screen[k] = st;
                 }
             }
             arr.push(day);
