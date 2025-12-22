@@ -228,6 +228,7 @@ export const addANewShowtime = async (req: AuthRequest, res: Response) => {
             cinemaId: cinema._id,
             ticketPrices,
             seats: screen.seatLayout,
+            formatShowing: format,
             status: ShowtimeStatus.SCHEDULED
         });
 

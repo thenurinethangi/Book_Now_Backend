@@ -15,6 +15,7 @@ export interface IShowtime extends Document {
     cinemaId: mongoose.Types.ObjectId
     ticketPrices: {}
     seats: {}[][]
+    formatShowing: string
     status: ShowtimeStatus
     createdAt?: Date
     updatedAt?: Date
@@ -28,17 +29,18 @@ const showtimeSchema = new Schema<IShowtime>({
     cinemaId: { type: Schema.Types.ObjectId, ref: 'Cinema', required: true },
     ticketPrices: { type: {}, required: true, default: null },
     seats: { type: [{}], required: true, default: null },
-    status: { type: String, enum: Object.values(ShowtimeStatus), required: true}
+    formatShowing: { type: String, required: true, default: null },
+    status: { type: String, enum: Object.values(ShowtimeStatus), required: true }
 },
     {
-        timestamps: true, 
+        timestamps: true,
     }
 );
 
 showtimeSchema.virtual('bookings', {
-  ref: 'Booking',
-  localField: '_id',
-  foreignField: 'showtimeId'
+    ref: 'Booking',
+    localField: '_id',
+    foreignField: 'showtimeId'
 });
 
 showtimeSchema.set('toObject', { virtuals: true });
