@@ -6,6 +6,6 @@ import { generateMovieSummery } from '../controllers/aiController';
 
 const router = express.Router();
 
-router.post('/movie/summery', authenticate, authorize([Role.USER]), generateMovieSummery);
+router.post('/movie/summery', generateMovieSummery);
 
 export default router;

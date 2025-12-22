@@ -1,28 +1,41 @@
-import { Response } from "express";
+import { Request, Response } from "express";
+import { AuthRequest } from "../middlewares/authenticate";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from 'dotenv'
-import { AuthRequest } from "../middlewares/authenticate";
 dotenv.config();
 
-const ai = new GoogleGenAI({});
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export const generateMovieSummery = async (req: AuthRequest, res: Response) => {
+export async function generateMovieSummery(req: Request, res: Response) {
 
-    const { description } = req.body;
+    const { movieTitle } = req.body;
 
-    if (!description) {
-        res.status(400).json({ message: 'No Description Provide', data: null });
-        return;
-    }
+    const prompt = `
+Write a concise and engaging movie summary in 150 to 250 words.
+
+Rules:
+- Write ONLY the movie summary.
+- Do NOT include headings, titles, bullet points, or numbered lists.
+- Do NOT add introductions like "Here is the summary".
+- Do NOT include opinions, ratings, or analysis.
+- Do NOT mention actors, directors, or release year.
+- Write in clear, natural English as a single flowing paragraph.
+
+Movie description or title:
+${movieTitle}
+`;
 
     try {
-        const response = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: `Write a full blog post based on this topic: ${description}` });
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+        });
 
-        res.status(202).json({ message: 'Success!', data: { content: response.text } });
+        res.status(200).json({ message: 'Successfully generated the movie summery', data: response.text });
         return;
     }
     catch (e) {
-        res.status(500).json({ message: 'Fail to generate blog post content, try later!', data: null });
+        res.status(500).json({ message: 'Failed to generated the movie summery', data: null });
         return;
     }
 }
