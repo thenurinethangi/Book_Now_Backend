@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { addMovieRequest, addMovieToCinemaMovieList, addNewMovieForAdmin, changeMovieStatusForAdmin, checkMovieInCinemasManageMovieList, deleteAMovie, fuck, getAllAvailableMoviesOfCinemaToAdd, getAllCinemaMovies, getAllComingSoonMovies, getAllManagedMoviesForAdmin, getAllNowShowingMovies, getCinemaAllAvailableMovie, getMovieAvailableFormats, getMovieDetails } from '../controllers/movieController';
+import { addMovieRequest, addMovieToCinemaMovieList, addNewMovieForAdmin, changeMovieStatusForAdmin, checkMovieInCinemasManageMovieList, deleteAMovie, fuck, getAllAvailableMoviesOfCinemaToAdd, getAllCinemaMovies, getAllComingSoonMovies, getAllManagedMoviesForAdmin, getAllNowShowingMovies, getCinemaAllAvailableMovie, getMovieAvailableFormats, getMovieDetails, getMoviesBookingsCount } from '../controllers/movieController';
 import { upload } from '../middlewares/upload';
 
 const router = express.Router();
@@ -34,5 +34,7 @@ router.get('/nowShowing/all', getAllNowShowingMovies);
 router.get('/comingSoon/all', getAllComingSoonMovies);
 
 router.get('/:id', getMovieDetails);
+
+router.post('/bookings/count', getMoviesBookingsCount);
 
 export default router;

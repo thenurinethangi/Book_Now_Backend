@@ -476,8 +476,8 @@ export const getAllComingSoonMovies = async (req: AuthRequest, res: Response) =>
 export const getMovieDetails = async (req: AuthRequest, res: Response) => {
 
     const id = req.params.id;
-    
-    if(!id){
+
+    if (!id) {
         res.status(400).json({ message: "Movie ID not provided!", data: null });
         return;
     }
@@ -490,6 +490,35 @@ export const getMovieDetails = async (req: AuthRequest, res: Response) => {
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load movie deatils!`, data: null });
+        return;
+    }
+
+}
+
+
+export const getMoviesBookingsCount = async (req: AuthRequest, res: Response) => {
+
+    const { movieList } = req.body;
+
+    if (!movieList || movieList.length <= 0) {
+        res.status(400).json({ message: "Movies list not provided!", data: null });
+        return;
+    }
+
+    try {
+        let arr = [];
+        for (let i = 0; i < movieList.length; i++) {
+            const id = movieList[i]._id;
+            const showtimeIds = await Showtime.find({ movieId: id }).distinct("_id");
+            const bookings = await Booking.find({ showtimeId: { $in: showtimeIds } });
+            arr.push(bookings.length);
+        }
+
+        res.status(200).json({ message: "Successfully load bookings counts of movies!", data: arr });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load bookings counts of movies!`, data: null });
         return;
     }
 
