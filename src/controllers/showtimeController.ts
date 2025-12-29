@@ -385,3 +385,98 @@ export const getUnavailableSeats = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const getAllShowtimesOfACinema = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinemaId = req.params.cinemaId;
+        console.log(cinemaId)
+
+        const toSLTime = (date: Date) =>
+            new Date(date.toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
+
+        const todaySL = toSLTime(new Date());
+
+        const daysArray: any[][][] = [];
+
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(todaySL);
+            day.setDate(todaySL.getDate() + i);
+
+            const startOfDaySL = new Date(
+                day.getFullYear(),
+                day.getMonth(),
+                day.getDate(),
+                0, 0, 0
+            );
+
+            const endOfDaySL = new Date(
+                day.getFullYear(),
+                day.getMonth(),
+                day.getDate(),
+                23, 59, 59
+            );
+
+            const startUTC = new Date(startOfDaySL.toISOString());
+            const endUTC = new Date(endOfDaySL.toISOString());
+
+            const showtimes = await Showtime.find({
+                cinemaId,
+                date: {
+                    $gte: startUTC,
+                    $lte: endUTC
+                }
+            })
+                .populate('movieId')
+                .populate('screenId');
+
+            console.log(showtimes);
+
+            const movieGroups: { [key: string]: any[] } = {};
+
+            showtimes.forEach(st => {
+                const movieId = st.movieId?._id?.toString();
+
+                if (!movieGroups[movieId]) {
+                    movieGroups[movieId] = [];
+                }
+
+                movieGroups[movieId].push(st);
+            });
+
+            daysArray.push(Object.values(movieGroups));
+        }
+
+        const arr: any[][][] = [];
+        for (let i = 0; i < daysArray.length; i++) {
+            const day = daysArray[i];
+            for (let j = 0; j < day.length; j++) {
+                const screen = day[j];
+                for (let k = 0; k < screen.length; k++) {
+                    let st = screen[k];
+                    st = st.toObject();
+                    const bookings = await Booking.find({ showtimeId: st._id, status: { $ne: BookingStatus.FAILED } });
+                    let count = 0;
+                    for (let l = 0; l < bookings.length; l++) {
+                        const book: any = bookings[l];
+                        count += book.seatsDetails.length;
+                    }
+                    console.log('bookings', count);
+                    st["bookings"] = count;
+                    screen[k] = st;
+                }
+            }
+            arr.push(day);
+        }
+
+        return res.status(200).json({
+            message: "Showtimes fetched successfully",
+            data: arr
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Server error", data: null });
+    }
+};

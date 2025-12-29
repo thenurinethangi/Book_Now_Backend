@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { addANewShowtime, checkShowtimeAlreadyExist, getAllShowtimesOfAMovie, getCinemaShowtime, getShowtimeDetailsById, getUnavailableSeats } from '../controllers/showtimeController';
+import { addANewShowtime, checkShowtimeAlreadyExist, getAllShowtimesOfACinema, getAllShowtimesOfAMovie, getCinemaShowtime, getShowtimeDetailsById, getUnavailableSeats } from '../controllers/showtimeController';
 
 const router = express.Router();
 
@@ -17,5 +17,7 @@ router.get('/7Days/:movieId',getAllShowtimesOfAMovie);
 router.get('/:id',getShowtimeDetailsById);
 
 router.get('/bookings/:id',getUnavailableSeats);
+
+router.get('/cinema/7Days/:cinemaId',getAllShowtimesOfACinema);
 
 export default router;

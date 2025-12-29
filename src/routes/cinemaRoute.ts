@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { activateACinema, deactivateACinema, deleteRejectedCinema, getAllActiveCinemas, getAllPendingCinemas, getAllRejectedCinemas, rejectACinema } from '../controllers/cinemaController';
+import { activateACinema, deactivateACinema, deleteRejectedCinema, getAllActiveCinemas, getAllPendingCinemas, getAllRejectedCinemas, getCinemaDetailsById, rejectACinema } from '../controllers/cinemaController';
 
 const router = express.Router();
 
@@ -21,5 +21,7 @@ router.put('/reject/:id',authenticate,authorize([Role.ADMIN]),rejectACinema);
 router.delete('/rejected/delete/:id',authenticate,authorize([Role.ADMIN]),deleteRejectedCinema);
 
 router.get('/active/all',getAllActiveCinemas);
+
+router.get('/data/:id',getCinemaDetailsById);
 
 export default router;

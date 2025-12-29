@@ -160,3 +160,20 @@ export const deleteRejectedCinema = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const getCinemaDetailsById = async (req: AuthRequest, res: Response) => {
+
+    const cinemaId = req.params.id;
+
+    try {
+        const cinema = await Cinema.findOne({ _id: cinemaId });
+
+        res.status(200).json({ message: `Successfully load cinema details!`, data: cinema });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load cinema details!`, data: null });
+        return;
+    }
+}
