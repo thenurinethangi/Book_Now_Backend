@@ -59,10 +59,10 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
                     time: formatTime(showtimes[i].time.toString()),
                     status: showtimes[i].status,
                     bookingCount: bookings.length
-                });
+                }); 
             }
         }
-
+ 
         for (let i = 0; i < showtimes.length; i++) {
             const showDate = new Date(showtimes[i].date);
             const showDateColombo = new Date(showDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
