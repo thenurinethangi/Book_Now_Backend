@@ -4,14 +4,14 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IWatchlist extends Document {
     _id: mongoose.Types.ObjectId
     userId: mongoose.Types.ObjectId
-    movieIds: string[]
+    movieId: mongoose.Types.ObjectId
     createdAt?: Date
     updatedAt?: Date
 }
 
 const watchlistSchema = new Schema<IWatchlist>({
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    movieIds: { type: [String], required: true },
+    movieId: { type: Schema.Types.ObjectId, ref: 'Movie', required: true },
 },
     {
         timestamps: true,

@@ -17,6 +17,7 @@ import heroRoute from './routes/heroRoute'
 import stripeRoute from './routes/stripeRoute'
 import seatsRoute from './routes/seatsRoute'
 import aiRoute from './routes/aiRoute'
+import watchlistRoute from './routes/watchlistRoute'
 
 const dbUrl = process.env.DATABASE_URL as string;
 
@@ -45,6 +46,7 @@ app.use('/api/v1/hero', heroRoute);
 app.use('/api/v1/payment/stripe', stripeRoute);
 app.use('/api/v1/seats', seatsRoute);
 app.use('/api/v1/ai', aiRoute);
+app.use('/api/v1/watchlist', watchlistRoute);
 
 mongoose.connect(dbUrl)
     .then(() => {
