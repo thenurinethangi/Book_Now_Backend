@@ -375,12 +375,13 @@ export const getUnavailableSeats = async (req: AuthRequest, res: Response) => {
     }
 
     try {
-        const bookings = await Booking.find({ showtimeId: id, status: { $ne: BookingStatus.FAILED } });
+        const bookings = await Booking.find({ showtimeId: id, status: { $nin: [BookingStatus.FAILED, BookingStatus.CANCELED] } });
 
         res.status(200).json({ message: `Successfully load bookings for showtime!`, data: bookings });
         return;
     }
     catch (e) {
+        console.log(e);
         res.status(500).json({ message: `Fail to load bookings for shomtime!`, data: null });
         return;
     }
