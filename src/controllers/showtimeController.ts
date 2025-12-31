@@ -381,7 +381,6 @@ export const getUnavailableSeats = async (req: AuthRequest, res: Response) => {
         return;
     }
     catch (e) {
-        console.log(e);
         res.status(500).json({ message: `Fail to load bookings for shomtime!`, data: null });
         return;
     }
