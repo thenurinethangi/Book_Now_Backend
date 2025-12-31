@@ -54,18 +54,18 @@ export const removeMovieFromWatchlist = async (req: AuthRequest, res: Response) 
 export const getAllWatchlistMovies = async (req: AuthRequest, res: Response) => {
 
     try {
-        const watchlist = await Watchlist.find({ userId: req.sub });
+        const watchlist = await Watchlist.find({ userId: req.sub }).populate('movieId');
 
         let arr = [];
         for (let i = 0; i < watchlist.length; i++) {
             const e = watchlist[i];
-            const movie = await Movie.find({ _id: e.movieId, status: { $ne: MovieStatus.NOT_SHOWING } });
+            const movie = await Movie.find({ _id: e.movieId._id, status: { $ne: MovieStatus.NOT_SHOWING } });
             if (movie) {
                 arr.push(e);
             }
         }
 
-        return res.status(200).json({ message: "Successfully load all watchlist movies!", data: null });
+        return res.status(200).json({ message: "Successfully load all watchlist movies!", data: arr });
     }
     catch (e) {
         res.status(500).json({ message: `Failed to load all watchlist movies!`, data: null });
