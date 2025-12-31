@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
-import { Booking } from "../models/Booking";
+import { Booking, BookingStatus } from "../models/Booking";
 import { Showtime } from "../models/Showtime";
 import { Movie } from "../models/Movie";
 import { Screen } from "../models/Screen";
@@ -145,4 +145,44 @@ function getBookingChange(today: number, yesterday: number): number {
     }
 
     return ((today - yesterday) / yesterday) * 100;
+}
+
+
+export const getAllMyBookings = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const bookings = await Booking.find({ userId: req.sub, status: { $ne: BookingStatus.FAILED } })
+            .populate("userId")
+            .populate("showtimeId")
+            .sort({ createdAt: -1 });
+
+        let arr = [];
+        for (let i = 0; i < bookings.length; i++) {
+            const e: any = bookings[i];
+            const movie = await Movie.findOne({ _id: e.showtimeId.movieId });
+            const screen = await Screen.findOne({ _id: e.showtimeId.screenId });
+            const cinema = await Cinema.findOne({ _id: e.showtimeId.cinemaId });
+
+            arr.push({
+                _id: e._id,
+                date: e.date,
+                tickets: e.tickets,
+                ticketsDetails: e.ticketsDetails,
+                seatsDetails: e.seatsDetails,
+                showtimeId: e.showtimeId,
+                userId: e.userId,
+                status: e.status,
+                total: e.total,
+                movie,
+                screen,
+                cinema
+            });
+        }
+
+        return res.status(200).json({ message: "Load all my bookings successfully.", data: arr });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load my booking!`, data: null });
+        return;
+    }
 }

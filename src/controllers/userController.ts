@@ -58,3 +58,16 @@ export const getCurrentUserData = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const logout = async (req: AuthRequest, res: Response) => {
+
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+    });
+
+    res.status(200).json({ message: 'Logged out!' , data: null});
+
+}

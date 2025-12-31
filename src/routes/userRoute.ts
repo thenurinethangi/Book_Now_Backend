@@ -12,4 +12,6 @@ router.get('/admin/all/admins', authenticate, authorize([Role.ADMIN]), getAllAdm
 
 router.get('/current', authenticate, authorize([Role.USER]), getCurrentUserData);
 
+router.get('/logout', authenticate, authorize([Role.USER]), getCurrentUserData);
+
 export default router;
