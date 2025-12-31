@@ -191,14 +191,88 @@ export const sendEmailWithOtp = async (req: Request, res: Response) => {
         from: process.env.EMAIL_USER,
         to: email,
         replyTo: email,
-        subject: "Synema - one time password (OTP)",
-        text: `Use this otp to verify your account`,
+        subject: "Synema - Verify Your Account",
+        text: `Your verification code is: ${code}. This code will expire in 10 minutes.`,
         html: `
-            <h3>OTP</h3>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>otp:</strong></p>
-            <p>${code}</p>
-            `,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Account</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0a; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <!-- Main Container -->
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);">
+                    
+                    <!-- Header with gradient -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #FF4646 0%, #8B0000 100%); padding: 40px 40px 35px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 600; letter-spacing: 2px;">SYNEMA</h1>
+                            <p style="margin: 8px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px; letter-spacing: 0.5px;">YOUR CINEMA EXPERIENCE</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 50px 40px 40px 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #ffffff; font-size: 24px; font-weight: 500;">Verify Your Account</h2>
+                            <p style="margin: 0 0 30px 0; color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6;">
+                                Thank you for joining Synema! To complete your registration and start booking movie tickets, please verify your email address using the code below.
+                            </p>
+
+                            <!-- OTP Box -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 30px 0;">
+                                <tr>
+                                    <td align="center" style="background-color: #0a0a0a; border: 2px solid #FF4646; border-radius: 8px; padding: 30px;">
+                                        <p style="margin: 0 0 10px 0; color: rgba(255, 255, 255, 0.6); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Your Verification Code</p>
+                                        <p style="margin: 0; color: #FF4646; font-size: 42px; font-weight: 600; letter-spacing: 8px; font-family: 'Courier New', monospace;">${code}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0 0 10px 0; color: rgba(255, 255, 255, 0.7); font-size: 14px; line-height: 1.6;">
+                                <strong style="color: rgba(255, 255, 255, 0.9);">Important:</strong> This code will expire in 10 minutes for security purposes.
+                            </p>
+                            <p style="margin: 0 0 30px 0; color: rgba(255, 255, 255, 0.7); font-size: 14px; line-height: 1.6;">
+                                If you didn't request this code, please ignore this email and your account won't be created.
+                            </p>
+
+                            <!-- Divider -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);"></td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 13px; line-height: 1.6;">
+                                Need help? Contact our support team at <a href="mailto:${process.env.EMAIL_USER}" style="color: #FF4646; text-decoration: none;">${process.env.EMAIL_USER}</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0a0a0a; padding: 30px 40px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                            <p style="margin: 0 0 10px 0; color: rgba(255, 255, 255, 0.5); font-size: 12px;">
+                                © ${new Date().getFullYear()} Synema. All rights reserved.
+                            </p>
+                            <p style="margin: 0; color: rgba(255, 255, 255, 0.4); font-size: 11px;">
+                                This is an automated message, please do not reply to this email.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `,
     };
 
     try {
