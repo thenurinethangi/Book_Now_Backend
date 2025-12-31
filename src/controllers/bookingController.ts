@@ -186,3 +186,26 @@ export const getAllMyBookings = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const cancelBooking = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        return res.status(400).json({ message: "Booking ID not provided.", data: null });
+    }
+
+    try {
+        const result = await Booking.updateOne({ _id: id }, { status: BookingStatus.CANCELED });
+
+        if (result.modifiedCount > 0) {
+            return res.status(200).json({ message: "Canceled booking successfully.", data: null });
+        }
+        return res.status(500).json({ message: "Failed to cancel booking.", data: null });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Failed to cancel booking!`, data: null });
+        return;
+    }
+}
