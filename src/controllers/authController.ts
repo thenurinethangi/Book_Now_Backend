@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import { request, Request, Response } from "express";
 import cloudinary from "../config/cloudinaryConfig";
 import { Role, Status, User } from "../models/User";
-import { Cinema } from "../models/Cinema";
+import { Cinema, CinemaStatus } from "../models/Cinema";
 import { CinemaOwner } from "../models/CinemaOwner";
 import transporter from "../config/emailConfig";
 import dotenv from "dotenv";
@@ -30,6 +30,8 @@ export const signUpCinema = async (req: Request, res: Response) => {
         adminLastName,
         adminPassword,
     } = req.body;
+
+    console.log(req.body);
 
     const files = req.files as {
         [fieldname: string]: Express.Multer.File[];
@@ -77,7 +79,7 @@ export const signUpCinema = async (req: Request, res: Response) => {
             lastName: adminLastName,
             roles: [Role.CINEMA],
             isVerified: false,
-            status: Status.ACITIVE,
+            status: Status.DEACTIVE,
         });
 
         const savedUser = await newUser.save();
@@ -98,7 +100,7 @@ export const signUpCinema = async (req: Request, res: Response) => {
             cinemaImageUrl,
             bussinessRegisterDocumentsUrl,
             userId: savedUser._id,
-            status: Status.ACITIVE,
+            status: CinemaStatus.PENDING,
         });
 
         const savedCinema = await newCinema.save();
@@ -109,7 +111,7 @@ export const signUpCinema = async (req: Request, res: Response) => {
             nationalIdNumber: ownerNicNo,
             nationalIdDocumentUrl: ownerNicDocumentUrl,
             cinemaId: savedCinema._id,
-            status: Status.ACITIVE,
+            status: Status.DEACTIVE,
         });
 
         const savedCinemaOwner = await newCinemaOwner.save();
@@ -118,6 +120,7 @@ export const signUpCinema = async (req: Request, res: Response) => {
         return;
     }
     catch (e) {
+        console.log(e);
         res.status(500).json({ message: "Sign Up Fail!", data: null });
         return;
     }
@@ -134,29 +137,64 @@ export const signIn = async (req: Request, res: Response) => {
     }
 
     try {
-        const user = await User.findOne({ email: email, roles: [role] });
+        let u = null;
 
-        if (!user) {
-            res.status(404).json({ message: "User not found, please sign up!", data: null });
-            return;
+        if (role === Role.CINEMA) {
+            const user = await User.findOne({ email: email, roles: [role] });
+
+            if (user && user.status === Status.ACITIVE) {
+
+                if (user.password !== password) {
+                    res.status(401).json({ message: "Authentication failed, password is incorrect!", data: null });
+                    return;
+                }
+
+                if (!user.isVerified) {
+                    res.status(401).json({ message: "Authentication failed, verify your email!", data: user });
+                    return;
+                }
+                u = user;
+            }
+            else if (user && user.status === Status.DEACTIVE) {
+                res.status(400).json({ message: "Sorry, you can't sign in to Synema until the admin approves your request to manage your cinema!", data: null });
+                return;
+            }
+            else {
+                res.status(404).json({ message: "User not found, please sign up!", data: null });
+                return;
+            }
+        }
+        else {
+            const user = await User.findOne({ email: email, roles: [role], status: Status.ACITIVE });
+
+            u = user;
+
+            if (!user) {
+                res.status(404).json({ message: "User not found, please sign up!", data: null });
+                return;
+            }
+
+            if (user.password !== password) {
+                res.status(401).json({ message: "Authentication failed, password is incorrect!", data: null });
+                return;
+            }
+
+            if (!user.isVerified) {
+                res.status(401).json({ message: "Authentication failed, verify your email!", data: user });
+                return;
+            }
         }
 
-        if (user.password !== password) {
-            res.status(401).json({ message: "Authentication failed, password is incorrect!", data: null });
+        if (u) {
+            const accessToken = generateAccessToken(u);
+            const refreshToken = generateRefreshToken(u);
+
+            res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
+
+            res.status(200).json({ message: "Successfully sign in!", data: accessToken });
             return;
         }
-
-        if (!user.isVerified) {
-            res.status(401).json({ message: "Authentication failed, verify your email!", data: user });
-            return;
-        }
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
-
-        res.status(200).json({ message: "Successfully sign in!", data: accessToken });
+        res.status(500).json({ message: "Failed to sign in, try later", data: null });
         return;
     }
     catch (e) {

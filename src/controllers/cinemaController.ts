@@ -2,6 +2,8 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema, CinemaStatus } from "../models/Cinema";
 import { Screen } from "../models/Screen";
+import { Status, User } from "../models/User";
+import { CinemaOwner } from "../models/CinemaOwner";
 
 export const getAllActiveCinemas = async (req: AuthRequest, res: Response) => {
 
@@ -78,11 +80,20 @@ export const deactivateACinema = async (req: AuthRequest, res: Response) => {
         const result = await Cinema.updateOne({ _id: id }, { $set: { status: CinemaStatus.DEACTIVE } });
 
         if (result.modifiedCount === 1) {
-            res.status(200).json({ message: `Successfully deactivate cinemas!`, data: null });
+
+            const cinema = await Cinema.findOne({ _id: id });
+            const isUpdateUserStatus = await User.updateOne({ _id: cinema?.userId }, { $set: { status: Status.DEACTIVE } });
+            const isUpdateCinemaOwnerStatus = await CinemaOwner.updateOne({ cinemaId: cinema?._id }, { $set: { status: Status.DEACTIVE } });
+
+            if (isUpdateUserStatus.modifiedCount > 0 && isUpdateCinemaOwnerStatus.modifiedCount > 0) {
+                res.status(200).json({ message: `Successfully deactivate cinemas!`, data: null });
+                return;
+            }
+            res.status(500).json({ message: `Fail to deactivate cinema!`, data: null });
             return;
         }
         else {
-            res.status(401).json({ message: `Fail to deactivate cinemas!`, data: null });
+            res.status(500).json({ message: `Fail to deactivate cinemas!`, data: null });
             return;
         }
     }
@@ -101,16 +112,25 @@ export const activateACinema = async (req: AuthRequest, res: Response) => {
         const result = await Cinema.updateOne({ _id: id }, { $set: { status: CinemaStatus.ACITIVE } });
 
         if (result.modifiedCount === 1) {
-            res.status(200).json({ message: `Successfully activate cinemas!`, data: null });
+
+            const cinema = await Cinema.findOne({ _id: id });
+            const isUpdateUserStatus = await User.updateOne({ _id: cinema?.userId }, { $set: { status: Status.ACITIVE } });
+            const isUpdateCinemaOwnerStatus = await CinemaOwner.updateOne({ cinemaId: cinema?._id }, { $set: { status: Status.ACITIVE } });
+
+            if (isUpdateUserStatus.modifiedCount > 0 && isUpdateCinemaOwnerStatus.modifiedCount > 0) {
+                res.status(200).json({ message: `Successfully activate cinemas!`, data: null });
+                return;
+            }
+            res.status(500).json({ message: `Fail to activate cinemas!`, data: null });
             return;
         }
         else {
-            res.status(401).json({ message: `Fail to activate cinemas!`, data: null });
+            res.status(500).json({ message: `Fail to activate cinemas!`, data: null });
             return;
         }
     }
     catch (e) {
-        res.status(500).json({ message: `Fail to deactivate cinema!`, data: null });
+        res.status(500).json({ message: `Fail to activate cinema!`, data: null });
         return;
     }
 }
@@ -126,9 +146,10 @@ export const rejectACinema = async (req: AuthRequest, res: Response) => {
         if (result.modifiedCount === 1) {
             res.status(200).json({ message: `Successfully rejected cinemas!`, data: null });
             return;
+
         }
         else {
-            res.status(401).json({ message: `Fail to reject cinemas!`, data: null });
+            res.status(500).json({ message: `Fail to reject cinemas!`, data: null });
             return;
         }
     }
@@ -144,14 +165,24 @@ export const deleteRejectedCinema = async (req: AuthRequest, res: Response) => {
     const id = req.params.id;
 
     try {
+        const cinema = await Cinema.findOne({ _id: id });
         const result = await Cinema.deleteOne({ _id: id, status: CinemaStatus.REJECTED });
 
         if (result.deletedCount === 1) {
-            res.status(200).json({ message: `Successfully deleted rejected cinemas!`, data: null });
+
+            const isDeletedUserStatus = await User.deleteOne({ _id: cinema?.userId });
+            const isDeletedCinemaOwnerStatus = await CinemaOwner.deleteOne({ cinemaId: cinema?._id });
+
+            if (isDeletedUserStatus.deletedCount > 0 && isDeletedCinemaOwnerStatus.deletedCount > 0) {
+                res.status(200).json({ message: `Successfully deleted rejected cinemas!`, data: null });
+                return;
+            }
+            res.status(500).json({ message: `Fail to delete rejected cinema!`, data: null });
             return;
+
         }
         else {
-            res.status(401).json({ message: `Fail to delete rejected cinemas!`, data: null });
+            res.status(500).json({ message: `Fail to delete rejected cinemas!`, data: null });
             return;
         }
     }

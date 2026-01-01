@@ -56,7 +56,7 @@ export const getCinemaTodayRevenue = async (req: AuthRequest, res: Response) => 
             yesterdayRevenue += Number(e.amount);
         }
 
-        const change = getRevenueChange(todayRevenue, yesterdayRevenue);
+        let change = getRevenueChange(todayRevenue, yesterdayRevenue);
 
         const data = {
             todayRevenue,
@@ -117,9 +117,8 @@ function getRevenueChange(today: number, yesterday: number): number {
         return today === 0 ? 0 : 100;
     }
 
-    return ((today - yesterday) / yesterday) * 100;
+    return +(((today - yesterday) / yesterday) * 100).toFixed(2);
 }
-
 
 
 export const getCinemaWholeYearRevenue = async (req: AuthRequest, res: Response) => {
