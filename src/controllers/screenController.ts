@@ -3,6 +3,8 @@ import { AuthRequest } from "../middlewares/authenticate";
 import cloudinary from "../config/cloudinaryConfig";
 import { Cinema } from "../models/Cinema";
 import { Screen, ScreenStatus } from "../models/Screen";
+import { Showtime } from "../models/Showtime";
+import { Booking } from "../models/Booking";
 
 export const addNewScreen = async (req: AuthRequest, res: Response) => {
 
@@ -310,4 +312,94 @@ export const activateAScreenForAdmin = async (req: AuthRequest, res: Response) =
         res.status(500).json({ message: `Fail to activate a screen!`, data: null });
         return;
     }
+}
+
+
+export const getScreenOccupancy = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found!", data: null });
+        }
+
+        const screens = await Screen.find({
+            cinemaId: cinema._id,
+            status: ScreenStatus.ACTIVE
+        });
+
+        const { start, end } = getTodayRange();
+
+        const result: any[] = [];
+
+        for (const screen of screens) {
+
+            const showtimes = await Showtime.find({
+                screenId: screen._id,
+                date: { $gte: start, $lte: end }
+            }).select("_id");
+
+            if (showtimes.length === 0) {
+                result.push({
+                    screenName: screen.screenName,
+                    occupancy: 0
+                });
+                continue;
+            }
+
+            const showtimeIds = showtimes.map(s => s._id);
+
+            const bookings = await Booking.find({
+                showtimeId: { $in: showtimeIds }
+            });
+
+            let bookedSeats = 0;
+
+            for (const booking of bookings) {
+                if (booking.seatsDetails?.seats) {
+                    bookedSeats += booking.seatsDetails.seats.length;
+                }
+            }
+
+            let totalSeats = 0;
+            for (const row of screen.seats) {
+                for (const seat of row) {
+                    if (seat !== null) totalSeats++;
+                }
+            }
+
+            const occupancy =
+                totalSeats === 0
+                    ? 0
+                    : Math.round((bookedSeats / totalSeats) * 100);
+
+            result.push({
+                screenName: screen.screenName,
+                occupancy
+            });
+        }
+
+        return res.status(200).json({
+            message: "Screen occupancy fetched successfully",
+            data: result
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Fail get screen occupancy!",
+            data: null
+        });
+    }
+};
+
+function getTodayRange() {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
 }
