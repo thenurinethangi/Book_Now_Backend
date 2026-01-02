@@ -1,5 +1,5 @@
 import express from 'express';
-import { activateAScreenForAdmin, addNewScreen, deactivateAScreenForAdmin, deleteAScreen, getAllActiveScreensForAdmin, getAllDeactiveScreensForAdmin, getAllScreens, getCinemaAllAvaiableScreens, getCinemaScreensStats, getScreenOccupancy, updateScreenStatus } from '../controllers/screenController';
+import { activateAScreenForAdmin, addNewScreen, deactivateAScreenForAdmin, deleteAScreen, getAllActiveScreensForAdmin, getAllDeactiveScreensForAdmin, getAllScreens, getCinemaAllAvaiableScreens, getCinemaScreensStats, getScreenOccupancy, getTodayBookingsOfScreens, updateScreenStatus } from '../controllers/screenController';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
@@ -28,5 +28,7 @@ router.put('/admin/deactive/:id', authenticate, authorize([Role.ADMIN]), deactiv
 router.put('/admin/active/:id', authenticate, authorize([Role.ADMIN]), activateAScreenForAdmin);
 
 router.get('/occupancy', authenticate, authorize([Role.CINEMA]), getScreenOccupancy);
+
+router.get('/today/bookings/count', authenticate, authorize([Role.CINEMA]), getTodayBookingsOfScreens);
 
 export default router;

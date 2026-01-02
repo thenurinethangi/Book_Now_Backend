@@ -357,17 +357,12 @@ export const getScreenOccupancy = async (req: AuthRequest, res: Response) => {
             let bookedSeats = 0;
 
             for (const booking of bookings) {
-                if (booking.seatsDetails?.seats) {
-                    bookedSeats += booking.seatsDetails.seats.length;
+                if (booking.seatsDetails) {
+                    bookedSeats += booking.seatsDetails.length;
                 }
             }
 
-            let totalSeats = 0;
-            for (const row of screen.seats) {
-                for (const seat of row) {
-                    if (seat !== null) totalSeats++;
-                }
-            }
+            let totalSeats = Number(screen.numberOfSeats);
 
             const occupancy =
                 totalSeats === 0
@@ -403,3 +398,71 @@ function getTodayRange() {
 
     return { start, end };
 }
+
+
+export const getTodayBookingsOfScreens = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found!", data: null });
+        }
+
+        const screens = await Screen.find({
+            cinemaId: cinema._id,
+            status: ScreenStatus.ACTIVE
+        });
+
+        const { start, end } = getTodayRange();
+
+        const result: any[] = [];
+
+        for (const screen of screens) {
+
+            const showtimes = await Showtime.find({
+                screenId: screen._id,
+                date: { $gte: start, $lte: end }
+            }).select("_id");
+
+            if (showtimes.length === 0) {
+                result.push({
+                    screenName: screen.screenName,
+                    bookings: 0
+                });
+                continue;
+            }
+
+            const showtimeIds = showtimes.map(s => s._id);
+
+            const bookings = await Booking.find({
+                showtimeId: { $in: showtimeIds }
+            });
+
+            let bookedSeats = 0;
+
+            for (const booking of bookings) {
+                if (booking.seatsDetails) {
+                    bookedSeats += booking.seatsDetails.length;
+                }
+            }
+
+            result.push({
+                screenName: screen.screenName,
+                bookings: bookedSeats
+            });
+        }
+
+        return res.status(200).json({
+            message: "Screen occupancy fetched successfully",
+            data: result
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Fail get screen occupancy!",
+            data: null
+        });
+    }
+};
