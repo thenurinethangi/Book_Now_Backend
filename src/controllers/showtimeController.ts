@@ -8,6 +8,14 @@ import { Screen } from "../models/Screen";
 
 export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
 
+    const { searchKey, daysRange, no } = req.body;
+    console.log(req.body)
+
+    if (!daysRange || !no) {
+        res.status(400).json({ message: "Incomplete data provided!", data: null });
+        return;
+    }
+
     try {
         const cinema = await Cinema.findOne({ userId: req.sub });
 
@@ -47,22 +55,22 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
                     _id: showtimes[i]._id,
                     cinemaId: showtimes[i].cinemaId,
                     movieId: {
-                        _id: showtimes[i]?.movieId._id || 'NaN',
-                        title: showtimes[i]?.movieId.title || 'NaN'
+                        _id: showtimes[i]?.movieId._id || 'N/A',
+                        title: showtimes[i]?.movieId.title || 'N/A'
                     },
                     screenId: {
-                        _id: showtimes[i].screenId?._id || 'NaN',
-                        screenName: showtimes[i].screenId?.screenName || 'NaN',
-                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'NaN'
+                        _id: showtimes[i].screenId?._id || 'N/A',
+                        screenName: showtimes[i].screenId?.screenName || 'N/A',
+                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'N/A'
                     },
                     date: formatDate(showtimes[i].date.toString()),
                     time: formatTime(showtimes[i].time.toString()),
                     status: showtimes[i].status,
                     bookingCount: bookings.length
-                }); 
+                });
             }
         }
- 
+
         for (let i = 0; i < showtimes.length; i++) {
             const showDate = new Date(showtimes[i].date);
             const showDateColombo = new Date(showDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
@@ -84,13 +92,13 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
                     _id: showtimes[i]._id,
                     cinemaId: showtimes[i].cinemaId,
                     movieId: {
-                        _id: showtimes[i].movieId?._id || 'NaN',
-                        title: showtimes[i].movieId?.title || 'NaN'
+                        _id: showtimes[i].movieId?._id || 'N/A',
+                        title: showtimes[i].movieId?.title || 'N/A'
                     },
                     screenId: {
-                        _id: showtimes[i].screenId?._id || 'NaN',
-                        screenName: showtimes[i].screenId?.screenName || 'NaN',
-                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'NaN'
+                        _id: showtimes[i].screenId?._id || 'N/A',
+                        screenName: showtimes[i].screenId?.screenName || 'N/A',
+                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'N/A'
                     },
                     date: formatDate(showtimes[i].date.toString()),
                     time: formatTime(showtimes[i].time.toString()),
@@ -100,7 +108,72 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        res.status(200).json({ message: `Successfully load all showtimes!`, data: arr });
+        let filterAfterSearchWord = []
+        if (searchKey.trim() === '') {
+            filterAfterSearchWord = [...arr];
+        }
+        else {
+            const key = searchKey.toLowerCase();
+
+            filterAfterSearchWord = arr.filter((s: any) =>
+                String(s._id).toLowerCase().includes(key) ||
+                String(s.cinemaId).toLowerCase().includes(key) ||
+                String(s.movieId?._id).toLowerCase().includes(key) ||
+                String(s.screenId?._id).toLowerCase().includes(key) ||
+                s.movieId?.title?.toLowerCase().includes(key) ||
+                s.screenId?.screenName?.toLowerCase().includes(key) ||
+                s.status?.toLowerCase().includes(key) ||
+                s.date?.toLowerCase().includes(key) ||
+                s.time?.toLowerCase().includes(key) ||
+                String(s.bookingCount) === key
+            );
+        }
+
+        let filterAfterDaysRange = [];
+        if (daysRange === 'all') {
+            filterAfterDaysRange = [...filterAfterSearchWord];
+        }
+        else {
+            const rangeDays = Number(daysRange);
+
+            const nowColombo = new Date(
+                new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+            );
+
+            const startDate = new Date(
+                nowColombo.getFullYear(),
+                nowColombo.getMonth(),
+                nowColombo.getDate() - (rangeDays - 1) 
+            );
+
+            filterAfterDaysRange = filterAfterSearchWord.filter((s: any) => {
+                const showDate = new Date(s.date);
+
+                const showDateColombo = new Date(
+                    showDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+                );
+
+                return showDateColombo >= startDate && showDateColombo <= nowColombo;
+            });
+        }
+
+        let filterAfterTablePageNo = []
+        let x = 0;
+        if(no === 1){
+            x = no-1;
+        }
+        else{
+            x = (no-1)*10;
+        }
+        for (let i = x; i < no*10; i++) {
+            if(i >= filterAfterDaysRange.length){
+                break;
+            }
+            const e = filterAfterDaysRange[i];
+            filterAfterTablePageNo.push(e);
+        }
+
+        res.status(200).json({ message: `Successfully load all showtimes!`, data: {filterAfterTablePageNo, size: filterAfterDaysRange.length} });
         return;
     }
     catch (e) {
@@ -481,3 +554,29 @@ export const getAllShowtimesOfACinema = async (req: AuthRequest, res: Response) 
         return res.status(500).json({ message: "Server error", data: null });
     }
 };
+
+
+export const deleteAShowtime = async (req: AuthRequest, res: Response) => {
+
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).json({ message: "Showtime ID not provided!", data: null });
+        return;
+    }
+
+    try {
+        const isDelete = await Showtime.deleteOne({ _id: id });
+
+        if (isDelete.deletedCount > 0) {
+            res.status(200).json({ message: `Successfully deleteed showtime!`, data: null });
+            return;
+        }
+        res.status(500).json({ message: `Fail to delete shomtime!`, data: null });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to delete shomtime!`, data: null });
+        return;
+    }
+}
