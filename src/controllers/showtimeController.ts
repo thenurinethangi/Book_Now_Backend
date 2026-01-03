@@ -143,7 +143,7 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
             const startDate = new Date(
                 nowColombo.getFullYear(),
                 nowColombo.getMonth(),
-                nowColombo.getDate() - (rangeDays - 1) 
+                nowColombo.getDate() - (rangeDays - 1)
             );
 
             filterAfterDaysRange = filterAfterSearchWord.filter((s: any) => {
@@ -159,21 +159,21 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
 
         let filterAfterTablePageNo = []
         let x = 0;
-        if(no === 1){
-            x = no-1;
+        if (no === 1) {
+            x = no - 1;
         }
-        else{
-            x = (no-1)*10;
+        else {
+            x = (no - 1) * 10;
         }
-        for (let i = x; i < no*10; i++) {
-            if(i >= filterAfterDaysRange.length){
+        for (let i = x; i < no * 10; i++) {
+            if (i >= filterAfterDaysRange.length) {
                 break;
             }
             const e = filterAfterDaysRange[i];
             filterAfterTablePageNo.push(e);
         }
 
-        res.status(200).json({ message: `Successfully load all showtimes!`, data: {filterAfterTablePageNo, size: filterAfterDaysRange.length} });
+        res.status(200).json({ message: `Successfully load all showtimes!`, data: { filterAfterTablePageNo, size: filterAfterDaysRange.length } });
         return;
     }
     catch (e) {
@@ -577,6 +577,123 @@ export const deleteAShowtime = async (req: AuthRequest, res: Response) => {
     }
     catch (e) {
         res.status(500).json({ message: `Fail to delete shomtime!`, data: null });
+        return;
+    }
+}
+
+
+export const getTotalShowtimesCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id });
+
+        res.status(200).json({ message: `Successfully load all showtimes count!`, data: showtimes.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load all showtimes count!`, data: null });
+        return;
+    }
+}
+
+
+export const getTodayShowtimesCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id });
+
+        const nowColombo = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+        const startOfTodayColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate());
+        const startOfTomorrowColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate() + 1);
+
+        let arr = [];
+        for (let i = 0; i < showtimes.length; i++) {
+            const showDate = new Date(showtimes[i].date);
+            const showDateColombo = new Date(showDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+
+            if (showDateColombo >= startOfTomorrowColombo) {
+                showtimes[i].status = ShowtimeStatus.SCHEDULED;
+            }
+            else if (showDateColombo < startOfTodayColombo) {
+                showtimes[i].status = ShowtimeStatus.EXPIRED;
+            }
+            else {
+                showtimes[i].status = ShowtimeStatus.TODAY;
+            }
+
+            if (showtimes[i].status === ShowtimeStatus.TODAY) {
+                arr.push(showtimes[i]);
+            }
+        }
+
+        res.status(200).json({ message: `Successfully load today showtimes count!`, data: arr.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load today showtimes count!`, data: null });
+        return;
+    }
+}
+
+
+export const getScheduledShowtimesCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id });
+
+        const nowColombo = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+        const startOfTodayColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate());
+        const startOfTomorrowColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate() + 1);
+
+        let arr = [];
+        for (let i = 0; i < showtimes.length; i++) {
+            const showDate = new Date(showtimes[i].date);
+            const showDateColombo = new Date(showDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+
+            if (showDateColombo >= startOfTomorrowColombo) {
+                showtimes[i].status = ShowtimeStatus.SCHEDULED;
+            }
+            else if (showDateColombo < startOfTodayColombo) {
+                showtimes[i].status = ShowtimeStatus.EXPIRED;
+            }
+            else {
+                showtimes[i].status = ShowtimeStatus.TODAY;
+            }
+
+            if (showtimes[i].status === ShowtimeStatus.SCHEDULED) {
+                arr.push(showtimes[i]);
+            }
+        }
+
+        res.status(200).json({ message: `Successfully load scheduled showtimes count!`, data: arr.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load scheduled showtimes count!`, data: null });
         return;
     }
 }
