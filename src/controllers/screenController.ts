@@ -466,3 +466,49 @@ export const getTodayBookingsOfScreens = async (req: AuthRequest, res: Response)
         });
     }
 };
+
+
+export const checkScreensHasShowtimes = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            return res.status(404).json({ message: "Cinema not found!", data: null });
+        }
+
+        const screens = await Screen.find({
+            cinemaId: cinema._id,
+            status: ScreenStatus.ACTIVE
+        });
+
+        const { start, end } = getTodayRange();
+
+        const result: any[] = [];
+
+        for (const screen of screens) {
+
+            const showtimes = await Showtime.find({
+                screenId: screen._id,
+                date: { $gte: start }
+            }).select("_id");
+
+            result.push({
+                screenName: screen.screenName,
+                showtimes: showtimes.length
+            });
+        }
+
+        return res.status(200).json({
+            message: "Screen occupancy fetched successfully",
+            data: result
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Fail get screen occupancy!",
+            data: null
+        });
+    }
+};

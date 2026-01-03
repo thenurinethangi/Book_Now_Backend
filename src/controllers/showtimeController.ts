@@ -47,13 +47,13 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
                     _id: showtimes[i]._id,
                     cinemaId: showtimes[i].cinemaId,
                     movieId: {
-                        _id: showtimes[i].movieId._id,
-                        title: showtimes[i].movieId.title
+                        _id: showtimes[i]?.movieId._id || 'NaN',
+                        title: showtimes[i]?.movieId.title || 'NaN'
                     },
                     screenId: {
-                        _id: showtimes[i].screenId._id,
-                        screenName: showtimes[i].screenId.screenName,
-                        numberOfSeats: showtimes[i].screenId.numberOfSeats
+                        _id: showtimes[i].screenId?._id || 'NaN',
+                        screenName: showtimes[i].screenId?.screenName || 'NaN',
+                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'NaN'
                     },
                     date: formatDate(showtimes[i].date.toString()),
                     time: formatTime(showtimes[i].time.toString()),
@@ -84,13 +84,13 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
                     _id: showtimes[i]._id,
                     cinemaId: showtimes[i].cinemaId,
                     movieId: {
-                        _id: showtimes[i].movieId._id,
-                        title: showtimes[i].movieId.title
+                        _id: showtimes[i].movieId?._id || 'NaN',
+                        title: showtimes[i].movieId?.title || 'NaN'
                     },
                     screenId: {
-                        _id: showtimes[i].screenId._id,
-                        screenName: showtimes[i].screenId.screenName,
-                        numberOfSeats: showtimes[i].screenId.numberOfSeats
+                        _id: showtimes[i].screenId?._id || 'NaN',
+                        screenName: showtimes[i].screenId?.screenName || 'NaN',
+                        numberOfSeats: showtimes[i].screenId?.numberOfSeats || 'NaN'
                     },
                     date: formatDate(showtimes[i].date.toString()),
                     time: formatTime(showtimes[i].time.toString()),
@@ -104,6 +104,7 @@ export const getCinemaShowtime = async (req: AuthRequest, res: Response) => {
         return;
     }
     catch (e) {
+        console.log(e);
         res.status(500).json({ message: `Fail to load showtimes!`, data: null });
         return;
     }
