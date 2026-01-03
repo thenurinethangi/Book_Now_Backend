@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Cinema } from "../models/Cinema";
 import { CinemaMovie } from "../models/CinemaMovie";
+import { MovieStatus } from "../models/Movie";
 
 export const removeMovieFromCinemasManageMovieList = async (req: AuthRequest, res: Response) => {
 
@@ -30,5 +31,38 @@ export const removeMovieFromCinemasManageMovieList = async (req: AuthRequest, re
         res.status(500).json({ message: `Failed to remove movie from managed movie list!`, data: null });
         return;
     }
+}
+
+
+export const changeMovieStatus = async (req: AuthRequest, res: Response) => {
+
+    const { id, status } = req.body;
+
+    if (!id || !status) {
+        res.status(400).json({ message: `Incomplete data provided!`, data: null });
+        return;
+    }
+
+    try {
+        if (status === 'Now Showing') {
+            const result = await CinemaMovie.updateOne({ _id: id }, { status: MovieStatus.NOW_SHOWING });
+            if (result.modifiedCount === 1) {
+                res.status(200).json({ message: "Successfully updated the movie status!", data: null });
+                return;
+            }
+        }
+        else if (status === 'Coming Soon') {
+            const result = await CinemaMovie.updateOne({ _id: id }, { status: MovieStatus.COMING_SOON });
+            if (result.modifiedCount === 1) {
+                res.status(200).json({ message: "Successfully updated the movie status!", data: null });
+                return;
+            }
+        }
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to update the movie status!`, data: null });
+        return;
+    }
 
 }
+
