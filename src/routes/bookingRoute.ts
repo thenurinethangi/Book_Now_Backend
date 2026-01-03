@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { cancelBooking, getAllMyBookings, getCinemaAllBookings, getCinemaTodayBooking } from '../controllers/bookingController';
+import { cancelBooking, getAllMyBookings, getCanceledBookingsCount, getCinemaAllBookings, getCinemaTodayBooking, getScheduledBookingsCount, getTodayBookingsCount, getTotalBookingsCount } from '../controllers/bookingController';
 
 const router = express.Router();
 
@@ -19,5 +19,7 @@ router.get('/cinema/all/count',authenticate,authorize([Role.CINEMA]),getTotalBoo
 router.get('/cinema/today/count',authenticate,authorize([Role.CINEMA]),getTodayBookingsCount);
 
 router.get('/cinema/scheduled/count',authenticate,authorize([Role.CINEMA]),getScheduledBookingsCount);
+
+router.get('/cinema/canceled/count',authenticate,authorize([Role.CINEMA]),getCanceledBookingsCount);
 
 export default router;

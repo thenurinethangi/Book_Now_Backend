@@ -279,3 +279,193 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const getTotalBookingsCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id }).select("_id");
+
+        if (showtimes.length === 0) {
+            return res.status(200).json({ message: "No bookings found", data: [] });
+        }
+
+        const showtimeIds = showtimes.map(st => st._id);
+
+        const bookings = await Booking.find({ showtimeId: { $in: showtimeIds } })
+            .populate("userId")
+            .populate("showtimeId")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({ message: `Successfully load all showtimes count!`, data: bookings.length });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load all showtimes count!`, data: null });
+        return;
+    }
+}
+
+
+export const getTodayBookingsCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id }).select("_id");
+
+        if (showtimes.length === 0) {
+            return res.status(200).json({ message: "No bookings found", data: [] });
+        }
+
+        const showtimeIds = showtimes.map(st => st._id);
+
+        const bookings = await Booking.find({ showtimeId: { $in: showtimeIds } })
+            .populate("userId")
+            .populate("showtimeId")
+            .sort({ createdAt: -1 });
+
+        const nowColombo = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+        const startOfTodayColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate());
+        const startOfTomorrowColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate() + 1);
+
+        let arr = [];
+        for (let i = 0; i < bookings.length; i++) {
+            const bookedDate = new Date(bookings[i].date);
+            const bookedDateColombo = new Date(bookedDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+
+            if (bookedDateColombo >= startOfTomorrowColombo) {
+                bookings[i].status = BookingStatus.SCHEDULED;
+            }
+            else if (bookedDateColombo < startOfTodayColombo) {
+                bookings[i].status = BookingStatus.PAST;
+            }
+            else {
+                bookings[i].status = BookingStatus.TODAY;
+            }
+
+            if (bookings[i].status === BookingStatus.TODAY) {
+                arr.push(bookings[i]);
+            }
+        }
+
+        res.status(200).json({ message: `Successfully load today showtimes count!`, data: arr.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load today showtimes count!`, data: null });
+        return;
+    }
+}
+
+
+export const getScheduledBookingsCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id }).select("_id");
+
+        if (showtimes.length === 0) {
+            return res.status(200).json({ message: "No bookings found", data: [] });
+        }
+
+        const showtimeIds = showtimes.map(st => st._id);
+
+        const bookings = await Booking.find({ showtimeId: { $in: showtimeIds } })
+            .populate("userId")
+            .populate("showtimeId")
+            .sort({ createdAt: -1 });
+
+        const nowColombo = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+        const startOfTodayColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate());
+        const startOfTomorrowColombo = new Date(nowColombo.getFullYear(), nowColombo.getMonth(), nowColombo.getDate() + 1);
+
+        let arr = [];
+        for (let i = 0; i < bookings.length; i++) {
+            const bookedDate = new Date(bookings[i].date);
+            const bookedDateColombo = new Date(bookedDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+
+            if (bookedDateColombo >= startOfTomorrowColombo) {
+                bookings[i].status = BookingStatus.SCHEDULED;
+            }
+            else if (bookedDateColombo < startOfTodayColombo) {
+                bookings[i].status = BookingStatus.PAST;
+            }
+            else {
+                bookings[i].status = BookingStatus.TODAY;
+            }
+
+            if (bookings[i].status === BookingStatus.SCHEDULED) {
+                arr.push(bookings[i]);
+            }
+        }
+
+        res.status(200).json({ message: `Successfully load scheduled showtimes count!`, data: arr.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load scheduled showtimes count!`, data: null });
+        return;
+    }
+}
+
+
+export const getCanceledBookingsCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const showtimes = await Showtime.find({ cinemaId: cinema._id }).select("_id");
+
+        if (showtimes.length === 0) {
+            return res.status(200).json({ message: "No bookings found", data: [] });
+        }
+
+        const showtimeIds = showtimes.map(st => st._id);
+
+        const bookings = await Booking.find({ showtimeId: { $in: showtimeIds } })
+            .populate("userId")
+            .populate("showtimeId")
+            .sort({ createdAt: -1 });
+
+        let arr = [];
+        for (let i = 0; i < bookings.length; i++) {
+            if (bookings[i].status === BookingStatus.CANCELED) {
+                arr.push(bookings[i]);
+            }
+        }
+
+        res.status(200).json({ message: `Successfully load scheduled showtimes count!`, data: arr.length });
+        return;
+
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail load scheduled showtimes count!`, data: null });
+        return;
+    }
+}
