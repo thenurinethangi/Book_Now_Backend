@@ -8,6 +8,14 @@ import { Screen } from "../models/Screen";
 
 export const getCinemaAllBookings = async (req: AuthRequest, res: Response) => {
 
+    const { searchKey, daysRange, no } = req.body;
+    console.log(req.body)
+
+    if (!daysRange || !no) {
+        res.status(400).json({ message: "Incomplete data provided!", data: null });
+        return;
+    }
+
     try {
         const cinema = await Cinema.findOne({ userId: req.sub });
 
@@ -50,7 +58,69 @@ export const getCinemaAllBookings = async (req: AuthRequest, res: Response) => {
             });
         }
 
-        return res.status(200).json({ message: "Load all bookings successfully.", data: arr });
+        let filterAfterSearchWord = [];
+
+        if (!searchKey || searchKey.trim() === '') {
+            filterAfterSearchWord = [...arr];
+        }
+        else {
+            const key = searchKey.toLowerCase();
+
+            filterAfterSearchWord = arr.filter((b: any) =>
+                String(b._id).toLowerCase().includes(key) ||
+                String(b.showtimeId?._id || b.showtimeId).toLowerCase().includes(key) ||
+                String(b.userId?._id || b.userId).toLowerCase().includes(key) ||
+                String(b.userId?.firstName + ' ' + b.userId?.lastName).toLowerCase().includes(key) ||
+                String(b.userId?.email).toLowerCase().includes(key) ||
+                b.movieTitle?.toLowerCase().includes(key) ||
+                b.screenName?.toLowerCase().includes(key) ||
+                b.status?.toLowerCase().includes(key) ||
+                String(b.total).includes(key) ||
+                String(b.tickets).includes(key) ||
+                b.seatsDetails?.seats?.some((seat: string) =>
+                    seat.toLowerCase().includes(key)
+                ) ||
+                new Date(b.date).toLocaleDateString().includes(key)
+            );
+        }
+
+        let filterAfterDaysRange = [];
+
+        if (daysRange === 'all') {
+            filterAfterDaysRange = [...filterAfterSearchWord];
+        }
+        else {
+            const rangeDays = Number(daysRange);
+
+            const nowColombo = new Date(
+                new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+            );
+
+            const startDate = new Date(
+                nowColombo.getFullYear(),
+                nowColombo.getMonth(),
+                nowColombo.getDate() - (rangeDays - 1)
+            );
+
+            filterAfterDaysRange = filterAfterSearchWord.filter((b: any) => {
+                const bookingDateColombo = new Date(
+                    new Date(b.date).toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+                );
+
+                return bookingDateColombo >= startDate && bookingDateColombo <= nowColombo;
+            });
+        }
+
+        let filterAfterTablePageNo = [];
+
+        const startIndex = no === 1 ? 0 : (no - 1) * 10;
+
+        for (let i = startIndex; i < startIndex + 10; i++) {
+            if (i >= filterAfterDaysRange.length) break;
+            filterAfterTablePageNo.push(filterAfterDaysRange[i]);
+        }
+
+        return res.status(200).json({ message: "Load all bookings successfully.", data: { filterAfterTablePageNo, size: filterAfterDaysRange.length } });
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load booking!`, data: null });
