@@ -8,6 +8,14 @@ import transporter from "../config/emailConfig";
 
 export const getCinemaAllTransaction = async (req: AuthRequest, res: Response) => {
 
+    const { searchKey, daysRange, no } = req.body;
+    console.log(req.body)
+
+    if (!daysRange || !no) {
+        res.status(400).json({ message: "Incomplete data provided!", data: null });
+        return;
+    }
+
     try {
         const cinema = await Cinema.findOne({ userId: req.sub });
 
@@ -20,13 +28,64 @@ export const getCinemaAllTransaction = async (req: AuthRequest, res: Response) =
             .populate("userId")
             .sort({ createdAt: -1 });
 
-        return res.status(200).json({ message: "Load all transactions successfully.", data: transactions });
+
+        let filterAfterSearchWord: any[] = [];
+        if (searchKey.trim() === '') {
+            filterAfterSearchWord = [...transactions];
+        } else {
+            const key = searchKey.toLowerCase();
+
+            filterAfterSearchWord = transactions.filter((t: any) =>
+                String(t._id).toLowerCase().includes(key) ||
+                String(t.bookingId).toLowerCase().includes(key) ||
+                String(t.cinemaId).toLowerCase().includes(key) ||
+                String(t.userId?._id).toLowerCase().includes(key) ||
+                t.userId?.email?.toLowerCase().includes(key) ||
+                t.userId?.firstName?.toLowerCase().includes(key) ||
+                t.status?.toLowerCase().includes(key) ||
+                String(t.amount).includes(key)
+            );
+        }
+
+        let filterAfterDaysRange: any[] = [];
+        if (daysRange === 'all') {
+            filterAfterDaysRange = [...filterAfterSearchWord];
+        } else {
+            const rangeDays = Number(daysRange);
+
+            const nowColombo = new Date(
+                new Date().toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+            );
+
+            const startDate = new Date(
+                nowColombo.getFullYear(),
+                nowColombo.getMonth(),
+                nowColombo.getDate() - (rangeDays - 1)
+            );
+
+            filterAfterDaysRange = filterAfterSearchWord.filter((t: any) => {
+                const txDateColombo = new Date(
+                    new Date(t.date).toLocaleString('en-US', { timeZone: 'Asia/Colombo' })
+                );
+
+                return txDateColombo >= startDate && txDateColombo <= nowColombo;
+            });
+        }
+
+        const startIndex = no === 1 ? 0 : (no - 1) * 10;
+        const filterAfterTablePageNo = filterAfterDaysRange.slice(
+            startIndex,
+            startIndex + 10
+        );
+
+        return res.status(200).json({ message: "Load all transactions successfully.", data: { filterAfterTablePageNo, size: filterAfterDaysRange.length } });
     }
     catch (e) {
         res.status(500).json({ message: `Fail to load transactions!`, data: null });
         return;
     }
 }
+
 
 export const getCinemaTodayRevenue = async (req: AuthRequest, res: Response) => {
 
@@ -617,4 +676,27 @@ function formatToTime12h(dateString: string) {
         minute: "2-digit",
         hour12: true
     });
+}
+
+
+export const getCinemaRevenue = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const transactions = await Transaction.find({ cinemaId: cinema._id })
+            .populate("userId")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({ message: "Load all transactions successfully.", data: transactions });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load transactions!`, data: null });
+        return;
+    }
 }

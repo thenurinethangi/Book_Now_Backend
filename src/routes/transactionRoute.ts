@@ -6,7 +6,7 @@ import { confirmTransactionAndBookingIfBookingComplete, deleteTransactionAndBook
 
 const router = express.Router();
 
-router.get('/cinema/all', authenticate, authorize([Role.CINEMA]), getCinemaAllTransaction);
+router.post('/cinema/all', authenticate, authorize([Role.CINEMA]), getCinemaAllTransaction);
 
 router.get('/cinema/today/revenue', authenticate, authorize([Role.CINEMA]), getCinemaTodayRevenue);
 
