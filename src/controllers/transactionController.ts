@@ -689,14 +689,77 @@ export const getCinemaRevenue = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const transactions = await Transaction.find({ cinemaId: cinema._id })
-            .populate("userId")
-            .sort({ createdAt: -1 });
+        const transactions_amount = await Transaction.find({ cinemaId: cinema._id, status: TransactionStatus.COMPLETED }).select('amount -_id');
 
-        return res.status(200).json({ message: "Load all transactions successfully.", data: transactions });
+        const revenue = transactions_amount.reduce((sum, t: any) => sum + parseFloat(t.amount || '0'), 0)
+
+        return res.status(200).json({ message: "Load cinema revenue successfully.", data: revenue });
     }
     catch (e) {
-        res.status(500).json({ message: `Fail to load transactions!`, data: null });
+        res.status(500).json({ message: `Fail to cinema revenue!`, data: null });
+        return;
+    }
+}
+
+
+export const getCompleteTransactionCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const transactions = await Transaction.find({ cinemaId: cinema._id, status: TransactionStatus.COMPLETED }).select('_id');
+
+        return res.status(200).json({ message: "Load all Completed transactions count successfully.", data: transactions.length });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load Completed transactions count!`, data: null });
+        return;
+    }
+}
+
+
+export const getPendingTransactionCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const transactions = await Transaction.find({ cinemaId: cinema._id, status: TransactionStatus.PENDING }).select('_id');
+
+        return res.status(200).json({ message: "Load all Pending transactions count successfully.", data: transactions.length });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load Pending transactions count!`, data: null });
+        return;
+    }
+}
+
+
+export const getFailedTransactionCount = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinema = await Cinema.findOne({ userId: req.sub });
+
+        if (!cinema) {
+            res.status(404).json({ message: "Cinema not found!", data: null });
+            return;
+        }
+
+        const transactions = await Transaction.find({ cinemaId: cinema._id, status: TransactionStatus.FAILED }).select('_id');
+
+        return res.status(200).json({ message: "Load all Failed transactions count successfully.", data: transactions.length });
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to load Failed transactions count!`, data: null });
         return;
     }
 }
