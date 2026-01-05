@@ -208,3 +208,20 @@ export const getCinemaDetailsById = async (req: AuthRequest, res: Response) => {
         return;
     }
 }
+
+
+export const getAllDeactivatedCinemas = async (req: AuthRequest, res: Response) => {
+
+    try {
+        const cinemas = await Cinema.find({ status: CinemaStatus.DEACTIVE });
+
+        res.status(200).json({ message: `Successfully deactivate cinemas!`, data: cinemas });
+        return;
+    }
+    catch (e) {
+        res.status(500).json({ message: `Fail to deactivate cinema!`, data: null });
+        return;
+    }
+}
+
+activateACinema

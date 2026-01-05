@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { activateACinema, deactivateACinema, deleteRejectedCinema, getAllActiveCinemas, getAllPendingCinemas, getAllRejectedCinemas, getCinemaDetailsById, rejectACinema } from '../controllers/cinemaController';
+import { activateACinema, deactivateACinema, deleteRejectedCinema, getAllActiveCinemas, getAllDeactivatedCinemas, getAllPendingCinemas, getAllRejectedCinemas, getCinemaDetailsById, rejectACinema } from '../controllers/cinemaController';
 
 const router = express.Router();
 
@@ -13,6 +13,8 @@ router.get('/pending',authenticate,authorize([Role.ADMIN]),getAllPendingCinemas)
 router.get('/rejected',authenticate,authorize([Role.ADMIN]),getAllRejectedCinemas);
 
 router.put('/deactivate/:id',authenticate,authorize([Role.ADMIN]),deactivateACinema);
+
+router.get('/deactive',authenticate,authorize([Role.ADMIN]),getAllDeactivatedCinemas);
 
 router.put('/activate/:id',authenticate,authorize([Role.ADMIN]),activateACinema);
 
