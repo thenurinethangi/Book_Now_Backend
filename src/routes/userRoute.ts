@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { Role } from '../models/User';
-import { getAllAdmins, getAllUsers, getCurrentUserAndCinemaData, getCurrentUserData, logout } from '../controllers/userController';
+import { addNewAdmin, getAllAdmins, getAllUsers, getCurrentUserAndCinemaData, getCurrentUserData, logout } from '../controllers/userController';
 
 const router = express.Router();
 
@@ -15,5 +15,7 @@ router.get('/current', authenticate, authorize([Role.USER,Role.CINEMA,Role.ADMIN
 router.get('/logout', authenticate, authorize([Role.USER,Role.CINEMA,Role.ADMIN]), logout);
 
 router.get('/current/cinema', authenticate, authorize([Role.CINEMA]), getCurrentUserAndCinemaData);
+
+router.post('/admin/add/admin', authenticate, authorize([Role.ADMIN]), addNewAdmin);
 
 export default router;
