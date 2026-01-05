@@ -15,7 +15,7 @@ export interface ICinemaOwner extends Document {
 
 const cinemaOwnerSchema = new Schema<ICinemaOwner>({
     email: { type: String, required: true, unique: true },
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
     nationalIdNumber: { type: String, required: true, unique: true },
     nationalIdDocumentUrl: { type: String, required: true },
     cinemaId: { type: Schema.Types.ObjectId, ref: 'Cinema', required: true },
