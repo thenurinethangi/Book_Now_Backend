@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authenticate";
 import { Role, User } from "../models/User";
+import { Cinema } from "../models/Cinema";
 
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
@@ -70,4 +71,35 @@ export const logout = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ message: 'Logged out!' , data: null});
 
+}
+
+
+export const getCurrentUserAndCinemaData = async (req: AuthRequest, res: Response) => {
+
+    const id = req.sub;
+
+    if (!id) {
+        res.status(401).json({ message: `Unauthenicate!`, data: null });
+        return;
+    }
+
+    try {
+        const user = await User.findOne({ _id: id });
+
+        if (!user) {
+            res.status(404).json({ message: `User not found!`, data: null });
+            return;
+        }
+
+        const cinema = await Cinema.findOne({ userId: user._id });
+
+        res.status(200).json({ message: `Successfully get current user data!`, data: {user,cinema} });
+        return;
+
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).json({ message: `Fail get current user data!`, data: null });
+        return;
+    }
 }
